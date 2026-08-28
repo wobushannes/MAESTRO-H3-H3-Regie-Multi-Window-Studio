@@ -21,8 +21,13 @@ import {
   Trees,
   Tv,
   Rocket,
+  BookOpen,
+  Crosshair,
+  Landmark,
+  Mic,
 } from 'lucide-react';
 import { PresetTemplate, StyleCategory } from '../types';
+import { getNarratorVoiceFallbackForCategory } from '../utils/promptCompiler';
 
 interface TemplateLibraryProps {
   customTemplates: PresetTemplate[];
@@ -32,6 +37,7 @@ interface TemplateLibraryProps {
   onCopyText: (text: string, label: string) => void;
   nsfwMode: boolean;
   builtInTemplates: PresetTemplate[];
+  language?: 'de' | 'en';
 }
 
 export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
@@ -40,9 +46,10 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
   onDeleteCustomTemplate,
   onSelectTemplate,
   onCopyText,
-  nsfwMode,
   builtInTemplates,
+  language = 'de',
 }) => {
+  const isEn = language === 'en';
   const [selectedCategory, setSelectedCategory] = useState<StyleCategory | 'all' | 'custom'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -51,7 +58,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
   // New Template Form state
   const [newTitle, setNewTitle] = useState('');
   const [newCategory, setNewCategory] = useState<StyleCategory>('custom');
-  const [newBadge, setNewBadge] = useState('Eigene Vorlage');
+  const [newBadge, setNewBadge] = useState(isEn ? 'Custom Template' : 'Eigene Vorlage');
   const [newDescription, setNewDescription] = useState('');
   const [newPrompt, setNewPrompt] = useState('');
   const [newCamera, setNewCamera] = useState('Slow tracking shot');
@@ -60,24 +67,27 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
   const [newMotionSpeed, setNewMotionSpeed] = useState('24fps Normal');
   const [newAudioCue, setNewAudioCue] = useState('');
   const [newIsNsfw, setNewIsNsfw] = useState(false);
-  const [newTagsStr, setNewTagsStr] = useState('Eigene, Custom');
+  const [newTagsStr, setNewTagsStr] = useState('Custom, Preset');
 
   const allTemplates = [...customTemplates, ...builtInTemplates];
 
   const categories = [
-    { id: 'all', label: 'Alle Vorlagen', icon: Film, count: allTemplates.length },
-    { id: 'custom', label: 'Meine Vorlagen', icon: Bookmark, count: customTemplates.length },
-    { id: 'horror', label: 'Horror & Grusel', icon: Flame, count: allTemplates.filter(p => p.category === 'horror').length },
-    { id: 'sitcom', label: 'Sitcom & Comedy', icon: Tv, count: allTemplates.filter(p => p.category === 'sitcom').length },
-    { id: 'scify', label: 'Sci-Fi & Universe', icon: Rocket, count: allTemplates.filter(p => p.category === 'scify').length },
-    { id: 'bau', label: 'Bau & Handwerk', icon: Building, count: allTemplates.filter(p => p.category === 'bau').length },
-    { id: 'immobilien', label: 'Immobilien', icon: Home, count: allTemplates.filter(p => p.category === 'immobilien').length },
-    { id: 'restaurant', label: 'Restaurant & Food', icon: Utensils, count: allTemplates.filter(p => p.category === 'restaurant').length },
-    { id: 'fashion', label: 'Fashion & Erotik', icon: Shirt, count: allTemplates.filter(p => p.category === 'fashion').length },
-    { id: 'action', label: 'Action & Auto', icon: Zap, count: allTemplates.filter(p => p.category === 'action').length },
+    { id: 'all', label: isEn ? 'All Templates' : 'Alle Vorlagen', icon: Film, count: allTemplates.length },
+    { id: 'custom', label: isEn ? 'My Templates' : 'Meine Vorlagen', icon: Bookmark, count: customTemplates.length },
+    { id: 'horror', label: isEn ? 'Horror & Dread' : 'Horror & Grusel', icon: Flame, count: allTemplates.filter(p => p.category === 'horror').length },
+    { id: 'sitcom', label: isEn ? 'Sitcom & Comedy' : 'Sitcom & Comedy', icon: Tv, count: allTemplates.filter(p => p.category === 'sitcom').length },
+    { id: 'scify', label: isEn ? 'Sci-Fi & Space' : 'Sci-Fi & Universe', icon: Rocket, count: allTemplates.filter(p => p.category === 'scify').length },
+    { id: 'bau', label: isEn ? 'Construction & Trade' : 'Bau & Handwerk', icon: Building, count: allTemplates.filter(p => p.category === 'bau').length },
+    { id: 'immobilien', label: isEn ? 'Real Estate' : 'Immobilien', icon: Home, count: allTemplates.filter(p => p.category === 'immobilien').length },
+    { id: 'restaurant', label: isEn ? 'Food & Dining' : 'Restaurant & Food', icon: Utensils, count: allTemplates.filter(p => p.category === 'restaurant').length },
+    { id: 'fashion', label: isEn ? 'Fashion & Elegance' : 'Fashion & Erotik', icon: Shirt, count: allTemplates.filter(p => p.category === 'fashion').length },
+    { id: 'action', label: isEn ? 'Action & Stunts' : 'Action & Auto', icon: Zap, count: allTemplates.filter(p => p.category === 'action').length },
     { id: 'cyberpunk', label: 'Cyberpunk', icon: Sparkles, count: allTemplates.filter(p => p.category === 'cyberpunk').length },
-    { id: 'nature', label: 'Natur & Landschaft', icon: Trees, count: allTemplates.filter(p => p.category === 'nature').length },
-    { id: 'fantasy', label: 'Dark Fantasy', icon: Wand2, count: allTemplates.filter(p => p.category === 'fantasy').length },
+    { id: 'nature', label: isEn ? 'Nature & Landscape' : 'Natur & Landschaft', icon: Trees, count: allTemplates.filter(p => p.category === 'nature').length },
+    { id: 'fantasy', label: isEn ? 'Dark Fantasy' : 'Dark Fantasy', icon: Wand2, count: allTemplates.filter(p => p.category === 'fantasy').length },
+    { id: 'comic', label: isEn ? 'Comic & Graphic Novel' : 'Comic & Graphic Novel', icon: BookOpen, count: allTemplates.filter(p => p.category === 'comic').length },
+    { id: 'war', label: isEn ? 'War Cinema & Battle' : 'Kriegsfilm & Gefecht', icon: Crosshair, count: allTemplates.filter(p => p.category === 'war').length },
+    { id: 'politics', label: isEn ? 'Politics & Speeches' : 'Wahlkampf & Politik', icon: Landmark, count: allTemplates.filter(p => p.category === 'politics').length },
   ];
 
   const filteredTemplates = allTemplates.filter((tpl) => {
@@ -114,8 +124,8 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
       id: `custom-tpl-${Date.now()}`,
       title: newTitle.trim(),
       category: newCategory,
-      badge: newBadge.trim() || 'Eigene Vorlage',
-      description: newDescription.trim() || 'Benutzerdefinierte Vorlage',
+      badge: newBadge.trim() || (isEn ? 'Custom' : 'Eigene Vorlage'),
+      description: newDescription.trim() || (isEn ? 'User-defined template' : 'Benutzerdefinierte Vorlage'),
       prompt: newPrompt.trim(),
       camera: newCamera.trim(),
       lighting: newLighting.trim(),
@@ -125,7 +135,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
       negativePrompt: 'low quality, distorted, blurry, artifacts',
       isNsfw: newIsNsfw,
       isCustom: true,
-      tags: tagsArray.length > 0 ? tagsArray : ['Eigene'],
+      tags: tagsArray.length > 0 ? tagsArray : ['Custom'],
       windowsCount: 1,
     };
 
@@ -139,16 +149,18 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="space-y-6 pb-28 animate-fadeIn">
       {/* Header & Actions */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white border border-slate-200 p-5 rounded-2xl shadow-xs">
         <div>
           <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
             <Film className="w-5 h-5 text-amber-600" />
-            Vorlagen-Bibliothek (Presets & Custom)
+            {isEn ? 'Template Library (Presets & Custom)' : 'Vorlagen-Bibliothek (Presets & Custom)'}
           </h2>
           <p className="text-xs text-slate-500 mt-1 font-medium">
-            Wähle aus Fertig-Vorlagen oder erstelle deine eigenen wiederverwendbaren Vorlagen!
+            {isEn
+              ? 'Choose from ready cinematic templates or create your own reusable custom setups!'
+              : 'Wähle aus Fertig-Vorlagen oder erstelle deine eigenen wiederverwendbaren Vorlagen!'}
           </p>
         </div>
 
@@ -156,10 +168,10 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
           {/* Create Custom Template Button */}
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors shrink-0"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors shrink-0 cursor-pointer"
           >
             <PlusCircle className="w-4 h-4 text-amber-400" />
-            Neue Vorlage erstellen
+            {isEn ? 'Create Custom Template' : 'Neue Vorlage erstellen'}
           </button>
 
           {/* Search Bar */}
@@ -169,7 +181,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Vorlagen durchsuchen..."
+              placeholder={isEn ? 'Search templates...' : 'Vorlagen durchsuchen...'}
               className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white"
             />
           </div>
@@ -185,7 +197,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all border ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
                 isActive
                   ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-xs'
                   : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
@@ -212,11 +224,11 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                 <Bookmark className="w-5 h-5 text-amber-500" />
-                Eigene Vorlage erstellen
+                {isEn ? 'Create Custom Template' : 'Eigene Vorlage erstellen'}
               </h3>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-900 rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-900 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -225,14 +237,14 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
             <form onSubmit={handleSaveCustom} className="space-y-4 pt-4 text-xs">
               <div>
                 <label className="font-bold text-slate-800 block mb-1">
-                  Titel der Vorlage *
+                  {isEn ? 'Template Title *' : 'Titel der Vorlage *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="z.B. Meine Horror-Sanatorium Szene"
+                  placeholder={isEn ? 'e.g. My Gothic Fog Sanatorium' : 'z.B. Meine Horror-Sanatorium Szene'}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500"
                 />
               </div>
@@ -240,35 +252,40 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-800 block mb-1">
-                    Kategorie
+                    {isEn ? 'Category' : 'Kategorie'}
                   </label>
                   <select
                     value={newCategory}
                     onChange={(e: any) => setNewCategory(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:bg-white focus:outline-none"
                   >
-                    <option value="custom">Eigene</option>
+                    <option value="custom">{isEn ? 'Custom' : 'Eigene'}</option>
                     <option value="horror">Horror</option>
-                    <option value="bau">Bau & Handwerk</option>
-                    <option value="immobilien">Immobilien</option>
-                    <option value="restaurant">Restaurant</option>
+                    <option value="sitcom">Sitcom</option>
+                    <option value="scify">Sci-Fi</option>
+                    <option value="bau">{isEn ? 'Construction' : 'Bau & Handwerk'}</option>
+                    <option value="immobilien">{isEn ? 'Real Estate' : 'Immobilien'}</option>
+                    <option value="restaurant">{isEn ? 'Food & Dining' : 'Restaurant'}</option>
                     <option value="fashion">Fashion</option>
                     <option value="action">Action</option>
                     <option value="cyberpunk">Cyberpunk</option>
                     <option value="fantasy">Fantasy</option>
-                    <option value="nature">Natur</option>
+                    <option value="nature">{isEn ? 'Nature' : 'Natur'}</option>
+                    <option value="comic">Comic</option>
+                    <option value="war">{isEn ? 'War Cinema' : 'Kriegsfilm'}</option>
+                    <option value="politics">{isEn ? 'Politics' : 'Politik'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="font-bold text-slate-800 block mb-1">
-                    Badge / Label
+                    {isEn ? 'Badge / Tag' : 'Badge / Label'}
                   </label>
                   <input
                     type="text"
                     value={newBadge}
                     onChange={(e) => setNewBadge(e.target.value)}
-                    placeholder="z.B. Mein Style"
+                    placeholder={isEn ? 'e.g. My Style' : 'z.B. Mein Style'}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:bg-white focus:outline-none"
                   />
                 </div>
@@ -276,26 +293,26 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
 
               <div>
                 <label className="font-bold text-slate-800 block mb-1">
-                  Beschreibung
+                  {isEn ? 'Description' : 'Beschreibung'}
                 </label>
                 <input
                   type="text"
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="Kurze Erklärung der Vorlage..."
+                  placeholder={isEn ? 'Short summary of the preset...' : 'Kurze Erklärung der Vorlage...'}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:bg-white focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="font-bold text-slate-800 block mb-1">
-                  Haupt-Prompt *
+                  {isEn ? 'Main Prompt *' : 'Haupt-Prompt *'}
                 </label>
                 <textarea
                   required
                   value={newPrompt}
                   onChange={(e) => setNewPrompt(e.target.value)}
-                  placeholder="A cinematic video prompt in English or German..."
+                  placeholder="A cinematic video prompt..."
                   className="w-full h-24 bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500 font-sans resize-none"
                 />
               </div>
@@ -303,7 +320,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-800 block mb-1">
-                    Kamera
+                    {isEn ? 'Camera' : 'Kamera'}
                   </label>
                   <input
                     type="text"
@@ -315,7 +332,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
                 </div>
                 <div>
                   <label className="font-bold text-slate-800 block mb-1">
-                    Beleuchtung
+                    {isEn ? 'Lighting' : 'Beleuchtung'}
                   </label>
                   <input
                     type="text"
@@ -333,10 +350,10 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
                   id="customIsNsfw"
                   checked={newIsNsfw}
                   onChange={(e) => setNewIsNsfw(e.target.checked)}
-                  className="rounded text-amber-500 focus:ring-amber-500 h-4 w-4"
+                  className="rounded text-amber-500 focus:ring-amber-500 h-4 w-4 cursor-pointer"
                 />
-                <label htmlFor="customIsNsfw" className="font-bold text-slate-800">
-                  Enthält NSFW / Dark Horror Elemente
+                <label htmlFor="customIsNsfw" className="font-bold text-slate-800 cursor-pointer">
+                  {isEn ? 'Contains NSFW / Dark Horror Elements' : 'Enthält NSFW / Dark Horror Elemente'}
                 </label>
               </div>
 
@@ -344,15 +361,15 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:text-slate-900 font-bold"
+                  className="px-4 py-2 text-slate-600 hover:text-slate-900 font-bold cursor-pointer"
                 >
-                  Abbrechen
+                  {isEn ? 'Cancel' : 'Abbrechen'}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl shadow-xs"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl shadow-xs cursor-pointer"
                 >
-                  Vorlage Speichern
+                  {isEn ? 'Save Template' : 'Vorlage Speichern'}
                 </button>
               </div>
             </form>
@@ -388,7 +405,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
                   </span>
                   {tpl.isCustom && (
                     <span className="px-2 py-0.5 bg-slate-900 text-amber-300 text-[10px] font-extrabold rounded-lg border border-slate-800">
-                      ★ Eigene Vorlage
+                      {isEn ? '★ Custom' : '★ Eigene Vorlage'}
                     </span>
                   )}
                   {tpl.isNsfw && (
@@ -408,8 +425,8 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
                 {tpl.isCustom && (
                   <button
                     onClick={() => onDeleteCustomTemplate(tpl.id)}
-                    className="text-slate-400 hover:text-rose-400 p-1"
-                    title="Vorlage löschen"
+                    className="text-slate-400 hover:text-rose-400 p-1 cursor-pointer"
+                    title={isEn ? 'Delete template' : 'Vorlage löschen'}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -427,8 +444,8 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
                   {tpl.isCustom && tpl.sampleImage && (
                     <button
                       onClick={() => onDeleteCustomTemplate(tpl.id)}
-                      className="text-slate-400 hover:text-rose-600 p-1"
-                      title="Eigene Vorlage löschen"
+                      className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
+                      title={isEn ? 'Delete custom template' : 'Eigene Vorlage löschen'}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -452,6 +469,10 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
                   <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700">
                     💡 {tpl.lighting.split(' ')[0]}...
                   </span>
+                  <span className="px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200/60 rounded flex items-center gap-1 font-bold">
+                    <Mic className="w-2.5 h-2.5 text-amber-600" />
+                    {(tpl.narratorVoice || getNarratorVoiceFallbackForCategory(tpl.category, tpl.title)).split(',')[0]}
+                  </span>
                 </div>
               </div>
 
@@ -459,16 +480,16 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
               <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
                 <button
                   onClick={() => onSelectTemplate(tpl)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs transition-all shadow-xs"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs transition-all shadow-xs cursor-pointer"
                 >
                   <ArrowRight className="w-3.5 h-3.5" />
-                  In Builder Laden
+                  {isEn ? 'Load into Builder' : 'In Builder Laden'}
                 </button>
 
                 <button
                   onClick={() => handleCopy(tpl)}
-                  title="Prompt kopieren"
-                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors border border-slate-200"
+                  title={isEn ? 'Copy prompt' : 'Prompt kopieren'}
+                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors border border-slate-200 cursor-pointer"
                 >
                   {copiedId === tpl.id ? (
                     <Check className="w-4 h-4 text-emerald-600" />

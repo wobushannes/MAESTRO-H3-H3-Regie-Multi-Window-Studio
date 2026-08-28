@@ -10,6 +10,9 @@ import { fashionPresets } from './presets/fashion';
 import { actionPresets } from './presets/action';
 import { fantasyPresets } from './presets/fantasy';
 import { naturePresets } from './presets/nature';
+import { comicPresets } from './presets/comic';
+import { warPresets } from './presets/war';
+import { politicsPresets } from './presets/politics';
 
 // Base hand-crafted templates
 const BASE_TEMPLATES: PresetTemplate[] = [
@@ -24,6 +27,9 @@ const BASE_TEMPLATES: PresetTemplate[] = [
   ...actionPresets,
   ...fantasyPresets,
   ...naturePresets,
+  ...comicPresets,
+  ...warPresets,
+  ...politicsPresets,
 ];
 
 // Procedural high-fidelity templates database to expand knowledge & systems understudy
@@ -599,6 +605,256 @@ const PROMPT_THEMES: Record<string, {
     dialogues: [
       "Erzähler: 'In the heart of the endless tundra, time does not move forward. It simply waits.'",
       "Naturalist: 'The basalt formations act like nature\'s organ pipes. Listen closely to the wind.'"
+    ]
+  },
+  comic: {
+    titles: [
+      "NOIR INK VIGILANTE",
+      "MOEBIUS PASTEL WASTELAND",
+      "GOTHIC RUNIC KNIGHT",
+      "90S DYNAMIC MUTANT CLASH",
+      "ALEX ROSS PAINTED LEGENDS",
+      "AKIRA CYBER-HIGHWAY DRIFT",
+      "BERSERK ECLIPSE SLAYER",
+      "POP ART LICHTENSTEIN MELODRAMA",
+      "SOLO LEVELING SHADOW MONARCH",
+      "SPIDER-VERSE HALFTONE FREEFALL",
+      "SPAWN UNHOLY CHAINS",
+      "EC HORROR CRYPT TALES",
+      "ARKHAM MIXED MEDIA ASYLUM",
+      "LIGNE CLAIRE JUNGLE TEMPLE",
+      "JUNJI ITO SPIRAL TERROR",
+      "SERGIO TOPPI CELESTIAL NAVIGATOR",
+      "HEAVY METAL CHROME AIRBRUSH",
+      "CYBER-SUMI-E KATANA SLASH",
+      "VINTAGE NEWSPAPER CARTOON STRIP",
+      "VICTORIAN STEAMPUNK AIRSHIP"
+    ],
+    descriptions: [
+      "Harte Schwarz-Weiß-Tusche mit leuchtendem rotem Farbtupfer im strömenden Regen.",
+      "Surreale europäische Sci-Fi-Wüste mit feinsten Ligne-Claire-Konturen und Pastellfarben.",
+      "Gotischer Mignola-Stil mit massiven schwarzen Block-Schatten und okkulten Runen.",
+      "Dynamische 90er-Superhelden-Action mit extremen Schraffuren und elektrischer Aura.",
+      "Epische fotorealistische Gouache-Malerei im Stil von Alex Ross mit heiligem Morgenlicht.",
+      "80er Cyberpunk-Manga mit dichten Architektur-Tuschelinien und roten Lichtstreifen.",
+      "Dunkelstes Seinen-Manga mit tausenden feinen Schraffurlinien und schwarzer Aura.",
+      "Kultige 60er Pop-Art mit sichtbaren Ben-Day-Punkten und satten Primärfarben.",
+      "Moderner Webtoon mit strahlenden neon-violetten Schattenmagie-Flammen.",
+      "Spider-Verse-Stil mit CMYK-Druckraster-Glitches und atemberaubendem Höhenflug."
+    ],
+    prompts: [
+      "Stark graphic novel aesthetic in dramatic black and white ink with a lone crimson color accent. A brooding masked protector (picture 1) perches above rain-soaked asphalt.",
+      "Exquisite European Bande Dessinée art style inspired by Moebius. A lone nomad (picture 1) rides a biomechanical steed across pastel turquoise desert dunes.",
+      "Masterpiece gothic comic style with dense geometric black shadow masses. An occult hero (picture 1) investigates an ancient stone crypt glowing with amber candlelight.",
+      "Explosive dynamic 90s comic book illustration style. A powerful hero (picture 1) leaps from a crumbling skyscraper ledge as blue energy arcs across his armored suit.",
+      "Traditional gouache and watercolor painted comic book style inspired by Alex Ross. An iconic champion (picture 1) stands tall in golden hour cinematic rim light."
+    ],
+    cameras: [
+      "Extreme low-angle Dutch tilt push-in focusing on sharp ink shadow contours",
+      "Sweeping high-altitude panoramic pan revealing vast hand-inked comic landscapes",
+      "Dynamic comic panel tracking shot whipping through speed lines and motion blur",
+      "Slow creeping dramatic push-in with comic book halftone dot resolution"
+    ],
+    lightings: [
+      "High-contrast black and white Chiaroscuro with pure black shadows and hard rim light",
+      "Soft alien pastel double-sunlight with clean luminous flat fill and gentle gradients",
+      "Vibrant neon magenta and cyan dual-tone lighting with CMYK halftone dots",
+      "Golden hour painted sunlight with deep indigo gouache shadow planes"
+    ],
+    lenses: [
+      "35mm Graphic Novel Prime Lens with crisp black ink line rendering",
+      "24mm Ligne Claire Ultra-Sharp Lens with zero distortion and pristine contours",
+      "18mm Dynamic Action Comic Lens with intentional perspective exaggeration",
+      "85mm Pop Art Halftone Lens with authentic vintage screenprint texture"
+    ],
+    clothes: [
+      "Heavy black oilskin trenchcoat with popped collar and deep fedora hat",
+      "Flowing saffron-yellow desert nomad robes with geometric embroidery",
+      "Tactical Kevlar bodysuit with metallic armor plates and tattered cape",
+      "Polished mirror-chrome cybernetic armor with neon glowing conduits",
+      "Vintage 70s striped shirt with blue denim overalls and red sneakers"
+    ],
+    wardrobeLabel: [
+      "Noir-Trenchcoat & Schlapphut",
+      "Moebius Wüsten-Nomaden-Robe",
+      "Gepanzerter Superhelden-Body",
+      "Glänzende Chrom-Cyber-Rüstung",
+      "Retro Zeitungscomic-Outfit"
+    ],
+    audios: [
+      "[Audio: Heavy rain pouring on asphalt, moody saxophone riff, gravelly narrator voice]",
+      "[Audio: Whispering desert wind, strange crystalline bird chirps, analog synth pads]",
+      "[Audio: Thunderclap, electrical energy sizzle, flapping cape, heroic brass fanfare]",
+      "[Audio: Sucking shadow magic drone, metallic blade unsheathing whistle, booming 808 drop]"
+    ],
+    dialogues: [
+      "Detective: 'This city doesn\'t sleep. It just bleeds in black and white.'",
+      "Hero: 'The storm didn\'t bring me here. I brought the storm.'",
+      "Nomad: 'The sands remember the kings that the stars have long forgotten.'",
+      "Hunter: 'Arise... and take your place among the shadows.'"
+    ]
+  },
+  war: {
+    titles: [
+      "MUDDY TRENCH BARRAGE",
+      "CASUALTY TOURNIQUET RESCUE",
+      "ARMORED MEDEVAC STRETCHER DASH",
+      "FPV DRONE BUNKER RECON",
+      "WINTER FROSTBITE LINE",
+      "CONCRETE DUST CQB SWEEP",
+      "NIGHT PHOSPHOR NVG RAID",
+      "UNDERGROUND SURGEON TRIAGE",
+      "BELL TOWER SNIPER OVERWATCH",
+      "TURRET BREECH SHELL RELOAD",
+      "HEAVY HOWITZER SHOCKWAVE",
+      "FARMLAND BUDDY DRAG",
+      "NIGHT FLARE RIVER CROSSING",
+      "SMOKE SCREEN WITHDRAWAL"
+    ],
+    descriptions: [
+      "Schützengraben-Schlachtfeld mit Schlamm, Rauch und Schrapnell-Einschlägen.",
+      "Feld-Sanitäter versorgt unter Feuer einen verletzten Kameraden mit Tourniquet.",
+      "Sprint mit taktischer Trage zu einem gepanzerten Evakuierungsfahrzeug.",
+      "FPV-Drohnenpilot steuert im Schutz eines Kellers Aufklärungsflüge.",
+      "Erschöpfter Soldat im eiskalten Schneegraben mit gefrierendem Atem.",
+      "Taktischer Raum-zu-Raum Häuserkampf durch dichte Staubschwaden.",
+      "Nachtangriff mit Gen-3 Nachtsichtgeräten und unsichtbaren IR-Lasern.",
+      "Feldlazarett-Notoperation unter bebendem Bunker-Dach."
+    ],
+    prompts: [
+      "Visceral, gritty modern warfare sequence inside a mud-soaked frontline trench. A combat medic (picture 1) with grime-streaked face applies a tactical CAT tourniquet tightly to a wounded soldier as dirt falls from nearby artillery concussions.",
+      "High-stakes battlefield evacuation through swirling white smoke grenades. Four exhaust-strained infantrymen (picture 1) carry a folding stretcher with a wounded comrade toward an armored M113 personnel carrier.",
+      "Claustrophobic drone operator scene inside a shattered basement bunker. A focused pilot (picture 1) wearing digital FPV goggles guides an aerial reconnaissance drone across snowy frontline tree belts.",
+      "Intense tactical urban room clearance through billowing concrete dust. A four-man special forces team (picture 1 leading) sweeps a ruined corridor with weapon lights cutting through the haze.",
+      "Deep emotional war drama in a freezing winter trench. A shivering soldier (picture 1) with frost on his eyelashes stares into the cratered no-man's-land while clutching a warm metal canteen."
+    ],
+    cameras: [
+      "Intense handheld close-up tracking the combat medic's hands tightening the windlass rod",
+      "Dynamic low-angle sprinting Steadicam moving through swirling smoke and mud ruts",
+      "Slow claustrophobic orbit around the illuminated drone operator's FPV goggles",
+      "Over-the-shoulder point-of-view sweep pivoting swiftly around broken concrete doorways",
+      "Slow agonizing push-in capturing shivering breath vapor and the thousand-yard stare"
+    ],
+    lightings: [
+      "Gloomy overcast gray daylight mixed with flickering amber chem-light flare",
+      "Diffused winter sunlight scattering through thick white phosphorus smoke",
+      "Dark subterranean shadows with cool green phosphor glow from tactical monitors",
+      "Volumetric dust light beams piercing blasted concrete highrise walls",
+      "Monochrome Gen-3 NVG night vision luminescence with blooming IR laser lines"
+    ],
+    lenses: [
+      "35mm Gritty Master Cinema Lens with shallow depth and micro-shake",
+      "28mm Tactical Combat Wide Lens with optical smoke flare streaks",
+      "50mm Precision Cine Prime with high-contrast screen reflections",
+      "24mm Ultra-Sharp Tactical CQB Lens with realistic dust scattering",
+      "85mm Emotional Cinema Portrait Lens with falling snowflake bokeh"
+    ],
+    clothes: [
+      "Multicam combat uniform drenched in mud with FAST helmet and torn IFAK pouch",
+      "Full tactical plate carrier rig with ammo pouches and rescue drag handle",
+      "Thermal winter snow-camo smock over bulletproof vest with frosted balaclava",
+      "Maritime drysuit with minimalist flotation vest and night vision nods",
+      "Dusty CQB assault uniform with knee pads and high-cut ballistic helmet"
+    ],
+    wardrobeLabel: [
+      "Schlammverschmierter Multicam-Kampfanzug",
+      "Schwerer Platten-Träger mit Rettungsgriff",
+      "Winter-Tarnüberwurf mit Frost-Staub",
+      "Nachtoperations-Taktikweste",
+      "Häuserkampf-Sturmgepäck"
+    ],
+    audios: [
+      "[Audio: Heavy artillery concussions shaking earth, ragged gasping breaths, Velcro tearing sound of tourniquet, urgent radio calls]",
+      "[Audio: Roaring diesel engine of armored vehicle, deafening machine gun suppressive bursts, mud splashing boots]",
+      "[Audio: High-pitched electric drone motor hum, distant artillery rumble, whispered GPS grid coordinates]",
+      "[Audio: Tactical weapon clicks, broken masonry crunching under boots, short suppressed rifle bursts]",
+      "[Audio: Whistling winter wind through leafless trees, shivering breath, high-frequency tinnitus ringing]"
+    ],
+    dialogues: [
+      "Medic: 'Stay with me, keep your eyes on mine! Tourniquet is locked, you\'re going home!'",
+      "Squad Leader: 'Suppress that tree line! Move the litter now, get him in the hatch!'",
+      "Drone Pilot: 'Target acquired at grid point four-niner. Bird is locked on trajectory.'",
+      "Pointman: 'Clear left. Stacking on door two, breach on three!'",
+      "Soldier (whispering): 'The ringing never stops... even when the snow covers the artillery.'"
+    ]
+  },
+  politics: {
+    titles: [
+      "STADIUM CAMPAIGN RALLY",
+      "LIVE TV PRESIDENTIAL DEBATE",
+      "SMOKE-FILLED CABINET DEAL",
+      "ELECTION NIGHT WAR ROOM",
+      "RAIN-DRENCHED PRESS GAGGLE",
+      "CAPITOL MOTORCADE ESCORT",
+      "SITUATION ROOM MIDNIGHT CRISIS",
+      "LEAKED DOSSIER PRESS EMBARGO",
+      "BALLOT RECOUNT TENSION",
+      "VICTORY CONFETTI MIDNIGHT"
+    ],
+    descriptions: [
+      "Monumentale Wahlkampf-Rede im tobenden Stadion vor 20.000 Anhängern im Konfetti-Regen.",
+      "Präsidiales TV-Duell unter grellen Studioscheinwerfern mit Countdown-Ticker.",
+      "Machtverhandlungen hinter verschlossenen Türen im neoklassizistischen Amtszimmer.",
+      "Wahlnacht im Hauptquartier mit riesigen Live-Wahlkarten und Champagner-Jubel.",
+      "Skandal-Pressekonferenz im strömenden Regen mit 50 Mikrofonen und Blitzlichtgewitter.",
+      "Präsidialer Konvoi mit Blaulicht und Motorradeskorte am Kapitol vorbei.",
+      "Krisenstab-Sitzung um 2 Uhr morgens im unterirdischen Lagezentrum."
+    ],
+    prompts: [
+      "Electrifying political arena campaign rally in a packed stadium. A charismatic candidate (picture 1) with rolled-up sleeves speaks into a chrome microphone at an acrylic podium as golden confetti explodes in the air.",
+      "Tense live broadcast television political debate studio. The leading political contender (picture 1) delivers a razor-sharp rebuttal across the stage while a red digital countdown clock ticks down.",
+      "Moody political thriller scene inside a private government suite. A political strategist (picture 1) in a three-piece suit leans over a mahogany table covered in classified polling charts and whiskey tumblers.",
+      "Late-night campaign war room at 11:59 PM on election night. The campaign manager (picture 1) watches a wall of screens as swing-states flip, erupting into ecstatic cheers and popping Champagne.",
+      "High-intensity media ambush on federal courthouse steps in pouring rain. A grim political figure (picture 1) under a black umbrella navigates a scrum of shouted questions and blinding camera flashes."
+    ],
+    cameras: [
+      "Sweeping wide jib crane rising over cheering stadium crowds up to a tight telephoto profile",
+      "Intense slow push-in matching speech cadence, cutting between profile and wide multi-cam views",
+      "Creeping low-angle Dutch tilt sliding past mahogany bookcases toward the strategist's grin",
+      "Dynamic handheld tracking weaving through cheering campaign staffers to the candidate",
+      "Frenetic low-angle push-through matching bodyguard escort clearing a path in the rain"
+    ],
+    lightings: [
+      "Blinding stadium spotlights with flashing cell phone lights and glowing blue LED stage wash",
+      "Ultra-crisp 5600K broadcast studio lighting with subtle cool blue rim backlighting",
+      "Low-key amber chiaroscuro with green banker's lamp glow and cigar smoke ribbons",
+      "Cool blue and red ambient glow from massive wall-mounted electoral projection maps",
+      "Harsh strobe camera flashbulbs bursting in rapid succession against wet rainy asphalt"
+    ],
+    lenses: [
+      "85mm Master Political Portrait Prime with creamy audience bokeh and confetti flares",
+      "50mm Studio Broadcast Prime Lens with ultra-sharp facial micro-expression clarity",
+      "35mm Film Noir Political Prime with rich mahogany textures and deep shadow falloff",
+      "24mm Wide Documentary Cinema Lens capturing raw human emotion and scale",
+      "28mm Raw Documentary Lens with authentic lens rain droplets and strobe exposure spikes"
+    ],
+    clothes: [
+      "Tailored navy trousers with crisp white dress shirt, rolled sleeves and loosened power tie",
+      "Bespoke charcoal two-button suit with spread-collar shirt and scarlet power tie",
+      "Savile Row three-piece wool pinstripe vest and jacket with onyx cufflinks and pocket watch",
+      "White dress shirt with undone collar, laminated campaign VIP lanyard and sweat sheen",
+      "Charcoal cashmere overcoat with wet shoulders, dark silk tie and leather gloves"
+    ],
+    wardrobeLabel: [
+      "Wahlkampf-Hemd mit hochgekrempelten Ärmeln",
+      "Präsidialer TV-Studio-Anzug",
+      "Klassischer Dreiteiler-Nadelstreifenanzug",
+      "Wahlnacht-Hauptquartier-Business",
+      "Eleganter Kaschmir-Mantel mit Regenschirm"
+    ],
+    audios: [
+      "[Audio: Roar of twenty thousand cheering supporters, echoing stadium PA speech, confetti cannon blast]",
+      "[Audio: Crisp broadcast lapel mic voice, ticking digital timer chime, press gallery gasps]",
+      "[Audio: Ice cubes clinking in crystal glass, rustling classified paper dossiers, grandfather clock ticking]",
+      "[Audio: Cable news anchor breaking announcement, sudden eruption of cheers, Champagne cork popping]",
+      "[Audio: Rapid-fire camera shutter clicks, dozens of reporters shouting questions, heavy rain lashing]"
+    ],
+    dialogues: [
+      "Candidate: 'Tonight, we don\'t just turn the page. We write an entirely new chapter for this nation!'",
+      "Debater: 'My opponent wants to talk about yesterday\'s polls. I am here to talk about tomorrow\'s families.'",
+      "Strategist: 'In this town, laws are what we write after we\'ve already decided who survives.'",
+      "Campaign Manager: 'They just called Ohio! We did it... WE WON THE PRESIDENCY!'",
+      "Reporter: 'Governor, did you sign the off-shore transfer? The public deserves the truth!'"
     ]
   }
 };

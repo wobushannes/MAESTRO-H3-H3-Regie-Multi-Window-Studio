@@ -1,4 +1,4 @@
-import { PromptBuildState } from '../types';
+import { PromptBuildState, StyleCategory } from '../types';
 
 export function formatSecondsToTimestamp(sec: number): string {
   const mins = Math.floor(sec / 60);
@@ -394,6 +394,34 @@ export function getDialogueFallbackForCategory(category: string, title: string):
       'Deep voice: "Born from dust, shaped by oceans, standing eternal."',
       'Biologist whispers: "The canopy is alive. It listens to our footsteps and warns the roots."',
       'Climber gasps: "At this altitude, you don\'t conquer the summit. You only pray it tolerates you."'
+    ],
+    comic: [
+      'Detective: "This city doesn\'t sleep. It just bleeds in black and white."',
+      'Masked Vigilante: "The storm didn\'t bring me here. I brought the storm."',
+      'Desert Nomad: "The sands remember the kings that the stars have long forgotten."',
+      'Shadow Monarch: "Arise... and claim your rightful place in the dark domain."',
+      'Antihero: "Heaven wants me dead, Hell wants my soul. They\'re both going to be disappointed."',
+      'Pilot: "All thrusters green. Launching straight into the front line!"',
+      'Adventurer: "Great snakes! The secret inscription leads behind the waterfall!"'
+    ],
+    war: [
+      'Combat Medic: "Stay with me, look at my eyes! Tourniquet is locked, you\'re going home!"',
+      'Squad Leader: "Suppress that tree line! Move the litter now, get him in the hatch!"',
+      'Drone Pilot whispers: "Target acquired at grid point four-niner. Bird is locked on trajectory."',
+      'Pointman: "Clear left. Stacking on door two, breach on three!"',
+      'Exhausted Soldier (whispering): "The ringing never stops... even when the snow covers the artillery."',
+      'Surgeon: "Clamp that bleeder! Start the third bag of plasma, we are not losing him today!"',
+      'Spotter: "Wind left to right, four meters per second. Hold two mils high... take him on your exhale."',
+      'Gun Captain: "Battery, five rounds rapid fire! Pull lanyard, FIRE!"'
+    ],
+    politics: [
+      'Candidate: "Tonight, we don\'t just turn the page. We write an entirely new chapter for this nation!"',
+      'Debater: "My opponent wants to talk about yesterday\'s polls. I am here to talk about tomorrow\'s families."',
+      'Chief Strategist: "In this town, laws are what we write after we\'ve already decided who survives."',
+      'Campaign Manager: "They just called Ohio! We did it... WE WON THE PRESIDENCY!"',
+      'Reporter (shouting): "Governor, did you sign the off-shore transfer? The public deserves the truth!"',
+      'Secret Service Agent: "Eagle is rolling. Sector four clear, speed twenty-five to the South Gate."',
+      'Senator (low voice): "You have sixty seconds to accept this compromise, or we leak the transcripts at sunrise."'
     ]
   };
 
@@ -409,5 +437,64 @@ export function getDialogueFallbackForCategory(category: string, title: string):
   // Deterministically select line based on index
   const selectedLine = lines[idx % lines.length];
   return selectedLine;
+}
+
+/**
+ * 🎙️ Dynamically determines the perfect cinematic narrator voice for any category or title theme.
+ */
+export function getNarratorVoiceFallbackForCategory(category: StyleCategory | string, title?: string): string {
+  const cat = (category || '').toLowerCase();
+  const t = (title || '').toLowerCase();
+
+  // Fine-grained thematic overrides based on title/keywords
+  if (t.includes('mist') || t.includes('whisper') || t.includes('child') || t.includes('doll') || t.includes('nurse') || t.includes('silent hill')) {
+    return 'Soft whispering female voice, intimate close-up microphone, breathy and haunting ASMR delivery with slight echoing resonance';
+  }
+  if (t.includes('innsmouth') || t.includes('lovecraft') || t.includes('dagon') || t.includes('cthulhu') || t.includes('1920') || t.includes('radio')) {
+    return 'Vintage 1940s radio broadcast announcer, crackling low-fidelity filters, retro tube microphone distortion, and transatlantic accent';
+  }
+  if (t.includes('western') || t.includes('cowboy') || t.includes('desert') || t.includes('saloon')) {
+    return 'Grit-heavy, weather-beaten old cowboy voice, dry, gravelly, slow and highly deliberate storytelling cadence';
+  }
+  if (t.includes('cyborg') || t.includes('android') || t.includes('ai ') || t.includes('robot') || t.includes('synth') || t.includes('drone')) {
+    return 'Cold monotone robotic synthesized artificial intelligence voice with subtle ring-modulation and glitchy digital artifacts';
+  }
+  if (t.includes('countess') || t.includes('gala') || t.includes('mansion') || t.includes('vampire') || t.includes('opera')) {
+    return 'Elegant high-society mature female voice, refined British Received Pronunciation (RP) accent, theatrical, sharp, and highly sophisticated';
+  }
+
+  // Category based matching
+  switch (cat) {
+    case 'war':
+      return 'Deep battle-hardened military veteran voice, gritty baritone with urgent tactical cadence and heavy theatrical gravitas';
+    case 'politics':
+      return 'Authoritative presidential broadcast narrator, crisp transatlantic diction, commanding gravitas and theatrical presence';
+    case 'horror':
+      return 'Deep cinematic male narrator with gravelly resonance, slow sinister cadence, and unsettling theatrical gravitas';
+    case 'scify':
+      return 'Cold monotone cybernetic AI voice with subtle ring-modulation, deep sub-harmonic resonance, and cosmic detachment';
+    case 'action':
+      return 'High-octane energetic blockbuster trailer narrator with punchy cadence, gritty baritone, and explosive intensity';
+    case 'fantasy':
+      return 'Epic mythical lorekeeper with ancient Celtic gravitas, rich baritone, and slow poetic cadence';
+    case 'cyberpunk':
+      return 'Moody neo-noir synth detective with cynical gravelly delivery, rain-slicked cadence, and melancholic depth';
+    case 'sitcom':
+      return 'Enthusiastic 90s television studio announcer with upbeat punchy rhythm, warm analog tone, and comedic flair';
+    case 'nature':
+      return 'Calm Nordic nature documentary narrator with melodic pacing, breathy warmth, and reverent atmospheric tone';
+    case 'comic':
+      return 'Theatrical classic comic book serial narrator, punchy, dramatic and bold 1960s superhero cadence';
+    case 'bau':
+      return 'Gruff, grounded master craftsman voice with authentic resonance, dry wit, and hearty confidence';
+    case 'immobilien':
+      return 'Sophisticated luxury architectural narrator with velvety smooth articulation, warm confidence, and serene elegance';
+    case 'restaurant':
+      return 'Passionate Michelin-star culinary presenter with warm sensory descriptions, velvety cadence, and French-gourmet nuance';
+    case 'fashion':
+      return 'Avant-garde haute couture narrator with French-accented whisper, breathy pacing, and seductive elegance';
+    default:
+      return 'Deep cinematic male narrator with gravelly resonance, slow cinematic cadence, and massive theatrical gravitas';
+  }
 }
 

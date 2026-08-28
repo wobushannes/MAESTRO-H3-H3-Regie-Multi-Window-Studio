@@ -10,6 +10,9 @@ export type StyleCategory =
   | 'action'
   | 'fantasy'
   | 'nature'
+  | 'comic'
+  | 'war'
+  | 'politics'
   | 'custom';
 
 export interface PresetTemplate {
@@ -39,6 +42,7 @@ export interface PresetTemplate {
   clothingDetails?: string;
   movieTitle?: string;
   dialogueLines?: string;
+  narratorVoice?: string;
   characterPersonaDescription?: string;
 }
 

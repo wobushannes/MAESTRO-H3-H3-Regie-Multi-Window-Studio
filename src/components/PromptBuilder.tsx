@@ -46,6 +46,8 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
   setState,
   onShowToast,
 }) => {
+  const isEn = state.language === 'en';
+
   const handleSelectOption = (
     field: keyof PromptBuildState,
     value: string
@@ -98,7 +100,9 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         rawConcept: `${existing}${space}${tag}`,
       };
     });
-    if (onShowToast) onShowToast(`Tag "${tag}" eingefügt!`);
+    if (onShowToast) {
+      onShowToast(isEn ? `Tag "${tag}" injected!` : `Tag "${tag}" eingefügt!`);
+    }
   };
 
   // Window Quantity Setter
@@ -113,12 +117,12 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             id: `win-${Date.now()}-${i}`,
             windowNumber: i,
             timeRange: `${startSec}s - ${endSec}s`,
-            prompt: i === 1 ? prev.rawConcept || 'Szene Start' : `Fortführung der Bewegung in Window ${i}`,
-            cameraTrajectory: prev.cameraMotion || 'Nahtlose Kamera-Weiterführung',
-            continuityNote: `Kontinuität aus Window ${i - 1}`,
+            prompt: i === 1 ? prev.rawConcept || (isEn ? 'Scene start' : 'Szene Start') : (isEn ? `Continuation of motion in Window ${i}` : `Fortführung der Bewegung in Window ${i}`),
+            cameraTrajectory: prev.cameraMotion || (isEn ? 'Seamless camera continuation' : 'Nahtlose Kamera-Weiterführung'),
+            continuityNote: isEn ? `Continuity from Window ${i - 1}` : `Kontinuität aus Window ${i - 1}`,
             motionSpeed: '24fps Normal',
             referenceImages: [],
-            dialogue: i === 1 ? 'Narrator: "The mystery begins..."' : '',
+            dialogue: i === 1 ? (isEn ? 'Narrator: "The mystery begins..."' : 'Erzähler: "Das Geheimnis beginnt..."') : '',
             sfxImpact: i === targetCount ? 'Final deep impact.' : 'Trailer impact.',
           });
         }
@@ -156,24 +160,24 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         for (let i = current.length + 1; i <= count; i++) {
           current.push({
             id: `ref-pro-${Date.now()}-${i}`,
-            label: i === 1 ? 'Subjekt-Referenz' : i === 2 ? 'Stil-Referenz' : `Referenzbild ${i}`,
+            label: i === 1 ? (isEn ? 'Subject Reference' : 'Subjekt-Referenz') : i === 2 ? (isEn ? 'Style Reference' : 'Stil-Referenz') : (isEn ? `Reference Image ${i}` : `Referenzbild ${i}`),
             tag: `picture ${i}`,
             role: i === 1 ? 'subject' : 'style',
             url: i === 1
               ? 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80'
               : 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80',
-            description: i === 1 ? 'Hauptcharakter / Subjekt Anker' : `Referenz Bild ${i}`,
+            description: i === 1 ? (isEn ? 'Main Character / Subject Anchor' : 'Hauptcharakter / Subjekt Anker') : (isEn ? `Reference Picture ${i}` : `Referenz Bild ${i}`),
           });
         }
       }
       return { ...prev, referenceImages: current };
     });
     if (count === 1) {
-      onShowToast('🖼️ Exakt 1 Referenzbild (picture 1) gewählt!');
+      if (onShowToast) onShowToast(isEn ? '🖼️ Exactly 1 reference image (picture 1) selected!' : '🖼️ Exakt 1 Referenzbild (picture 1) gewählt!');
     } else if (count === 0) {
-      onShowToast('🚫 Referenzbilder deaktiviert (0 Bilder)');
+      if (onShowToast) onShowToast(isEn ? '🚫 Reference images disabled (0 images)' : '🚫 Referenzbilder deaktiviert (0 Bilder)');
     } else {
-      onShowToast(`🖼️ ${count} Referenzbilder gewählt!`);
+      if (onShowToast) onShowToast(isEn ? `🖼️ ${count} reference images selected!` : `🖼️ ${count} Referenzbilder gewählt!`);
     }
   };
 
@@ -193,25 +197,27 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             <div className="flex items-center gap-2">
               <Film className="w-5 h-5 text-amber-400" />
               <h2 className="text-base font-extrabold tracking-tight">
-                Generator-Modus wählen
+                {isEn ? 'Select Generator Mode' : 'Generator-Modus wählen'}
               </h2>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Du entscheidest: Möchtest du einen einfachen Einzel-Clip oder eine strukturierte Multi-Window Studio-Sequenz generieren?
+              {isEn
+                ? 'Your choice: Generate a single standalone clip or a structured multi-window studio sequence.'
+                : 'Du entscheidest: Möchtest du einen einfachen Einzel-Clip oder eine strukturierte Multi-Window Studio-Sequenz generieren?'}
             </p>
           </div>
 
           <div className="inline-flex p-1 bg-slate-950 rounded-xl border border-slate-800 self-start sm:self-auto">
             <button
               onClick={() => setState((prev) => ({ ...prev, generatorMode: 'single' }))}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
                 state.generatorMode === 'single'
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
               <Film className="w-4 h-4" />
-              Einzelner Clip
+              {isEn ? 'Single Clip' : 'Einzelner Clip'}
             </button>
 
             <button
@@ -221,14 +227,16 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   handleSetWindowCount(2);
                 }
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
                 state.generatorMode === 'multi'
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
               <Layers className="w-4 h-4" />
-              Multi-Window Sequenz ({state.windows.length || 2} Windows)
+              {isEn
+                ? `Multi-Window Sequence (${state.windows.length || 2} Windows)`
+                : `Multi-Window Sequenz (${state.windows.length || 2} Windows)`}
             </button>
           </div>
         </div>
@@ -237,13 +245,15 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         {state.generatorMode === 'multi' && (
           <div className="pt-4 flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
             <div className="flex items-center gap-2 text-xs text-slate-300">
-              <span className="font-bold text-amber-400">Anzahl Windows wählen:</span>
+              <span className="font-bold text-amber-400">
+                {isEn ? 'Select Windows count:' : 'Anzahl Windows wählen:'}
+              </span>
               <div className="flex items-center gap-1.5">
                 {[2, 3, 4, 5, 6].map((num) => (
                   <button
                     key={num}
                     onClick={() => handleSetWindowCount(num)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
                       state.windows.length === num
                         ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
                         : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white'
@@ -257,10 +267,10 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
 
             <button
               onClick={handleAddWindow}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              Window hinzufügen
+              {isEn ? 'Add Window' : 'Window hinzufügen'}
             </button>
           </div>
         )}
@@ -272,18 +282,18 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
           <div className="flex items-center gap-2">
             <Clapperboard className="w-5 h-5 text-amber-700" />
             <h3 className="text-sm font-extrabold text-slate-900">
-              Kino-Trailer Setup (Studio Specification)
+              {isEn ? 'Cinema Trailer Setup (Studio Specification)' : 'Kino-Trailer Setup (Studio Specification)'}
             </h3>
           </div>
           <span className="px-2.5 py-0.5 bg-amber-600 text-white font-mono font-bold text-[10px] rounded-full uppercase">
-            Studio Standard
+            {isEn ? 'Studio Standard' : 'Studio Standard'}
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <div>
             <label className="text-xs font-extrabold text-slate-800 block mb-1">
-              Film- / Abspann-Titel:
+              {isEn ? 'Movie / Screenplay Title:' : 'Film- / Abspann-Titel:'}
             </label>
             <input
               type="text"
@@ -291,29 +301,29 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               onChange={(e) =>
                 setState((prev) => ({ ...prev, movieTitle: e.target.value }))
               }
-              placeholder="z.B. THE LAST LIGHTHOUSE"
+              placeholder={isEn ? 'e.g. THE LAST LIGHTHOUSE' : 'z.B. THE LAST LIGHTHOUSE'}
               className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-extrabold text-amber-950 focus:outline-none focus:border-amber-600"
             />
           </div>
 
           <div>
             <label className="text-xs font-extrabold text-slate-800 block mb-1">
-              Kamera- & Stil-Code:
+              {isEn ? 'Camera & Style Code:' : 'Kamera- & Stil-Code:'}
             </label>
             <input
               type="text"
-              value={state.styleCode || 'ASTROCINEMAV01K2T'}
+              value={state.styleCode !== undefined ? state.styleCode : 'ASTROCINEMAV01K2T'}
               onChange={(e) =>
                 setState((prev) => ({ ...prev, styleCode: e.target.value }))
               }
-              placeholder="z.B. ASTROCINEMAV01K2T"
+              placeholder="Default: ASTROCINEMAV01K2T"
               className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-amber-600"
             />
           </div>
 
           <div>
             <label className="text-xs font-extrabold text-slate-800 block mb-1">
-              Sprecher / Narrator:
+              {isEn ? 'Narrator / Voiceover:' : 'Sprecher / Narrator:'}
             </label>
             <div className="relative">
               <Mic className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
@@ -323,7 +333,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                 onChange={(e) =>
                   setState((prev) => ({ ...prev, narratorVoice: e.target.value }))
                 }
-                placeholder="z.B. Deep male narrator with gravitas"
+                placeholder={isEn ? 'e.g. Deep male narrator with gravitas' : 'z.B. Tiefer Kino-Erzähler mit Gravitas'}
                 className="w-full pl-8 pr-3 py-2 bg-white border border-amber-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-600"
               />
             </div>
@@ -331,7 +341,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
 
           <div>
             <label className="text-xs font-extrabold text-slate-800 block mb-1">
-              Dialoge / Whispers (Einzel-Modus):
+              {isEn ? 'Dialogue / Whispers (Single Mode):' : 'Dialoge / Whispers (Einzel-Modus):'}
             </label>
             <div className="relative">
               <MessageSquare className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
@@ -341,7 +351,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                 onChange={(e) =>
                   setState((prev) => ({ ...prev, dialogueLines: e.target.value }))
                 }
-                placeholder='z.B. She whispers: "Dad?"'
+                placeholder={isEn ? 'e.g. She whispers: "Dad?"' : 'z.B. Sie flüstert: "Papa?"'}
                 className="w-full pl-8 pr-3 py-2 bg-white border border-amber-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-600"
               />
             </div>
@@ -351,11 +361,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         {/* Quick Voice Selector */}
         <div className="pt-3 border-t border-amber-200/60">
           <label className="text-xs font-extrabold text-amber-950 block mb-2">
-            🎙️ Schnellauswahl Kino-Sprecher & Stimmen (Narrators):
+            {isEn ? '🎙️ Quick Select Cinema Narrator & Voice:' : '🎙️ Schnellauswahl Kino-Sprecher & Stimmen (Narrators):'}
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {NARRATOR_VOICE_OPTIONS.map((opt) => {
-              const isSelected = state.narratorVoice === opt.value;
+              const isSelected =
+                state.narratorVoice === opt.value ||
+                (Boolean(state.narratorVoice) &&
+                  state.narratorVoice.toLowerCase().includes(opt.label.toLowerCase().slice(0, 15)));
               return (
                 <button
                   key={opt.id}
@@ -366,15 +379,17 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                       narratorVoice: isSelected ? '' : opt.value,
                     }));
                   }}
-                  className={`text-left p-2.5 rounded-xl border text-[11px] transition-all ${
+                  className={`text-left p-2.5 rounded-xl border text-[11px] transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-amber-600 border-amber-700 text-white font-extrabold shadow-sm'
-                      : 'bg-white border-amber-200/50 text-slate-700 hover:border-amber-300 hover:bg-amber-100/50'
+                      ? 'bg-amber-600 border-amber-700 text-white font-extrabold shadow-sm ring-2 ring-amber-400/40'
+                      : 'bg-white border-amber-200/50 text-slate-700 hover:border-amber-400 hover:bg-amber-50'
                   }`}
                 >
-                  <div className={`font-extrabold ${isSelected ? 'text-white' : 'text-slate-900'}`}>{opt.labelDe}</div>
+                  <div className={`font-extrabold ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                    {isEn ? opt.label : opt.labelDe}
+                  </div>
                   <div className={`text-[9px] line-clamp-1 mt-0.5 ${isSelected ? 'text-amber-100' : 'text-slate-500'}`}>
-                    {opt.label}
+                    {opt.value}
                   </div>
                 </button>
               );
@@ -383,29 +398,31 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         </div>
       </div>
 
-      {/* NEW SECTION: MODE, KLEIDUNG & OUTFIT (WARDROBE / CHARACTER STYLING) */}
+      {/* SECTION: FASHION, WARDROBE & OUTFIT (CHARACTER STYLING) */}
       <div className="bg-white border border-amber-200/80 rounded-2xl p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <Shirt className="w-5 h-5 text-amber-600" />
             <div>
               <h3 className="text-sm font-extrabold text-slate-900">
-                Mode, Kleidung & Outfit (Wardrobe / Character Styling)
+                {isEn ? 'Fashion, Wardrobe & Outfit (Character Styling)' : 'Mode, Kleidung & Outfit (Wardrobe / Character Styling)'}
               </h3>
               <p className="text-[11px] text-slate-500">
-                Bestimme präzise Kleidung, Materialien, Stil & Accessoires für Charaktere und Darsteller.
+                {isEn
+                  ? 'Define precise clothing, fabrics, aesthetic & accessories for characters.'
+                  : 'Bestimme präzise Kleidung, Materialien, Stil & Accessoires für Charaktere und Darsteller.'}
               </p>
             </div>
           </div>
           <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] rounded-full uppercase">
-            Kleidungs-Control
+            {isEn ? 'Wardrobe Control' : 'Kleidungs-Control'}
           </span>
         </div>
 
         {/* Quick Selector Preset Cards */}
         <div className="space-y-2">
           <label className="text-xs font-extrabold text-slate-800 block">
-            Schnellauswahl Mode- & Kleidung-Stile:
+            {isEn ? 'Quick Select Fashion & Wardrobe Styles:' : 'Schnellauswahl Mode- & Kleidung-Stile:'}
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
             {state.wardrobeStyle && !WARDROBE_OPTIONS.some((opt) => opt.label === state.wardrobeStyle) && (
@@ -418,14 +435,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     clothingDetails: '',
                   }));
                 }}
-                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden"
+                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden cursor-pointer"
               >
                 <span className="absolute top-1 right-2 text-[8px] bg-emerald-600 text-white font-extrabold px-1 py-0.2 rounded uppercase animate-pulse">
-                  Vorlage aktiv
+                  {isEn ? 'Preset Active' : 'Vorlage aktiv'}
                 </span>
                 <div className="font-extrabold text-emerald-950 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  Spezial-Garderobe & Kleidung
+                  {isEn ? 'Special Wardrobe & Clothing' : 'Spezial-Garderobe & Kleidung'}
                 </div>
                 <div className="text-[10px] text-emerald-800 mt-0.5 line-clamp-1 font-mono">
                   {state.wardrobeStyle}
@@ -452,13 +469,13 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                       }));
                     }
                   }}
-                  className={`text-left p-2.5 rounded-xl border text-xs transition-all ${
+                  className={`text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="font-extrabold text-slate-900">{opt.labelDe}</div>
+                  <div className="font-extrabold text-slate-900">{isEn ? opt.label : opt.labelDe}</div>
                   <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
                     {opt.description}
                   </div>
@@ -472,7 +489,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           <div>
             <label className="text-xs font-extrabold text-slate-800 block mb-1">
-              Haupt-Outfit / Kleidungs-Stil:
+              {isEn ? 'Main Outfit / Wardrobe Style:' : 'Haupt-Outfit / Kleidungs-Stil:'}
             </label>
             <input
               type="text"
@@ -480,14 +497,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               onChange={(e) =>
                 setState((prev) => ({ ...prev, wardrobeStyle: e.target.value }))
               }
-              placeholder="z.B. Gothic Victorian Trenchcoat, 1920er Wollmantel"
+              placeholder={isEn ? 'e.g. Gothic Victorian Trenchcoat, 1920s Wool Coat' : 'z.B. Gothic Victorian Trenchcoat, 1920er Wollmantel'}
               className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
             />
           </div>
 
           <div>
             <label className="text-xs font-extrabold text-slate-800 block mb-1">
-              Materialien & Details:
+              {isEn ? 'Materials & Details:' : 'Materialien & Details:'}
             </label>
             <input
               type="text"
@@ -495,14 +512,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               onChange={(e) =>
                 setState((prev) => ({ ...prev, clothingDetails: e.target.value }))
               }
-              placeholder="z.B. Dunkler Samt, Messingknöpfe, Seidenschal, Abgewetzte Stiefel"
+              placeholder={isEn ? 'e.g. Dark velvet, brass buttons, silk scarf, worn boots' : 'z.B. Dunkler Samt, Messingknöpfe, Seidenschal, Abgewetzte Stiefel'}
               className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
             />
           </div>
 
           <div>
             <label className="text-xs font-extrabold text-slate-800 block mb-1">
-              Accessoires & Schmuck:
+              {isEn ? 'Accessories & Jewelry:' : 'Accessoires & Schmuck:'}
             </label>
             <input
               type="text"
@@ -510,17 +527,21 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               onChange={(e) =>
                 setState((prev) => ({ ...prev, fashionAccessories: e.target.value }))
               }
-              placeholder="z.B. Messing-Brille, Taschenuhr, Ledertasche"
+              placeholder={isEn ? 'e.g. Brass goggles, pocket watch, leather bag' : 'z.B. Messing-Brille, Taschenuhr, Ledertasche'}
               className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
             />
           </div>
         </div>
 
-        {/* NEW SUB-SECTION: DETAILREICHE PERSONABERSCHREIBUNG & REQUISITEN */}
+        {/* SUB-SECTION: DETAILED CHARACTER PERSONA & PROPS */}
         <div className="pt-4 border-t border-slate-100">
           <label className="text-xs font-extrabold text-slate-800 block mb-1 flex items-center justify-between">
-            <span className="flex items-center gap-1">🎭 Detailreiches Charakter-Profil & Persona-Beschreibung:</span>
-            <span className="text-[10px] text-amber-600 font-extrabold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 uppercase">KI-Video Booster</span>
+            <span className="flex items-center gap-1">
+              {isEn ? '🎭 Detailed Character Profile & Persona Description:' : '🎭 Detailreiches Charakter-Profil & Persona-Beschreibung:'}
+            </span>
+            <span className="text-[10px] text-amber-600 font-extrabold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 uppercase">
+              {isEn ? 'AI Video Booster' : 'KI-Video Booster'}
+            </span>
           </label>
           <textarea
             value={state.characterPersonaDescription || ''}
@@ -528,12 +549,18 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               setState((prev) => ({ ...prev, characterPersonaDescription: e.target.value }))
             }
             rows={2}
-            placeholder="Beschreibe das Gesicht, Alter, Haare, ethnische Herkunft, Narben, Mimik, Stimmung oder Charaktereigenschaften des Darstellers (z.B. 'A grizzled 45-year-old Scandinavian sea captain with intense piercing blue eyes, weather-beaten skin, heavy silver-flecked beard, looking directly into the camera with a steel gaze, jaw clenched')"
+            placeholder={
+              isEn
+                ? "Describe face, age, hair, ethnicity, scars, expression, mood or temperament (e.g. 'A grizzled 45-year-old Scandinavian sea captain with intense piercing blue eyes, weather-beaten skin, heavy silver-flecked beard, looking directly into the camera with a steel gaze, jaw clenched')"
+                : "Beschreibe das Gesicht, Alter, Haare, ethnische Herkunft, Narben, Mimik, Stimmung oder Charaktereigenschaften des Darstellers (z.B. 'A grizzled 45-year-old Scandinavian sea captain with intense piercing blue eyes...')"
+            }
             className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white resize-y font-mono text-[11px]"
           />
           {/* Quick Persona Inspiration Chips */}
           <div className="flex flex-wrap gap-1 mt-2">
-            <span className="text-[9px] font-extrabold text-slate-400 self-center uppercase mr-1">Auswahl-Inspirationen:</span>
+            <span className="text-[9px] font-extrabold text-slate-400 self-center uppercase mr-1">
+              {isEn ? 'Inspiration presets:' : 'Auswahl-Inspirationen:'}
+            </span>
             {[
               { label: 'Grizzled Captain', value: 'A grizzled 45-year-old Scandinavian sea captain, wind-beaten face, deep scars on left cheek, piercing steel blue eyes, heavy grey-flecked beard, stern expression.' },
               { label: 'Cyber Netrunner', value: 'A sleek 24-year-old Asian netrunner, glowing neon wire optic patterns trailing on cheekbones, sharp gaze, asymmetric undercut hair dyed neon violet.' },
@@ -547,7 +574,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                 key={chip.label}
                 type="button"
                 onClick={() => setState((prev) => ({ ...prev, characterPersonaDescription: chip.value }))}
-                className="text-[9px] px-2 py-0.5 bg-slate-100 hover:bg-amber-100/60 active:bg-amber-100 border border-slate-200 hover:border-amber-400 rounded-lg text-slate-700 font-bold transition-colors"
+                className="text-[9px] px-2 py-0.5 bg-slate-100 hover:bg-amber-100/60 active:bg-amber-100 border border-slate-200 hover:border-amber-400 rounded-lg text-slate-700 font-bold transition-colors cursor-pointer"
               >
                 + {chip.label}
               </button>
@@ -564,15 +591,15 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-500" />
               <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
-                Szenen-Beschreibung (Haupt-Konzept)
+                {isEn ? 'Scene Description (Main Concept)' : 'Szenen-Beschreibung (Haupt-Konzept)'}
               </h3>
             </div>
             <button
               onClick={handleReset}
-              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-rose-600 transition-colors font-medium"
+              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-rose-600 transition-colors font-medium cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Zurücksetzen
+              {isEn ? 'Reset' : 'Zurücksetzen'}
             </button>
           </div>
 
@@ -581,7 +608,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200 pb-2">
               <span className="font-extrabold text-amber-950 text-xs flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-amber-700" />
-                Referenzbilder-Anzahl wählen:
+                {isEn ? 'Select Reference Images Count:' : 'Referenzbilder-Anzahl wählen:'}
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {[0, 1, 2, 3, 4].map((num) => {
@@ -591,17 +618,17 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                       key={num}
                       type="button"
                       onClick={() => handleSetReferenceCount(num)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all border ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all border cursor-pointer ${
                         isSelected
                           ? 'bg-amber-600 text-white border-amber-700 shadow-xs'
                           : 'bg-white text-slate-800 border-slate-300 hover:bg-amber-100'
                       }`}
                     >
                       {num === 0
-                        ? '0 Bilder'
+                        ? (isEn ? '0 Images' : '0 Bilder')
                         : num === 1
-                        ? 'Exakt 1 Bild (picture 1)'
-                        : `${num} Bilder (picture 1–${num})`}
+                        ? (isEn ? 'Exactly 1 Image (picture 1)' : 'Exakt 1 Bild (picture 1)')
+                        : (isEn ? `${num} Images (picture 1–${num})` : `${num} Bilder (picture 1–${num})`)}
                     </button>
                   );
                 })}
@@ -611,14 +638,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             {state.referenceImages.length > 0 ? (
               <div className="flex flex-wrap items-center gap-1.5 text-xs">
                 <span className="font-bold text-slate-700">
-                  Tag im Text verankern:
+                  {isEn ? 'Anchor tag in prompt:' : 'Tag im Text verankern:'}
                 </span>
                 {state.referenceImages.map((ref, idx) => (
                   <button
                     key={ref.id}
                     type="button"
                     onClick={() => handleInjectTag(`(picture ${idx + 1})`)}
-                    className="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-950 font-mono text-[11px] font-extrabold border border-amber-300 rounded-lg transition-all shadow-2xs"
+                    className="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-950 font-mono text-[11px] font-extrabold border border-amber-300 rounded-lg transition-all shadow-2xs cursor-pointer"
                   >
                     +(picture {idx + 1})
                   </button>
@@ -626,7 +653,9 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               </div>
             ) : (
               <div className="text-[11px] text-slate-500 italic">
-                Keine Referenzbilder gewählt. Der Output wird keine "reference_pictures:" Zeile enthalten.
+                {isEn
+                  ? 'No reference images selected. Output will omit the "reference_pictures:" section.'
+                  : 'Keine Referenzbilder gewählt. Der Output wird keine "reference_pictures:" Zeile enthalten.'}
               </div>
             )}
           </div>
@@ -636,7 +665,11 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             onChange={(e) =>
               setState((prev) => ({ ...prev, rawConcept: e.target.value }))
             }
-            placeholder="z.B. Sweeping aerial view of a remote rocky island during a violent storm. A woman in her early thirties (picture 1) wearing a heavy wool coat explores..."
+            placeholder={
+              isEn
+                ? "e.g. Sweeping aerial view of a remote rocky island during a violent storm. A woman in her early thirties (picture 1) wearing a heavy wool coat explores..."
+                : "z.B. Sweeping aerial view of a remote rocky island during a violent storm. A woman in her early thirties (picture 1) wearing a heavy wool coat explores..."
+            }
             className="w-full h-28 bg-slate-50 border border-slate-300 rounded-xl p-3.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none font-sans"
           />
 
@@ -644,7 +677,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5 font-medium">
                 <Tag className="w-3.5 h-3.5 text-amber-600" />
-                Format:
+                {isEn ? 'Aspect Ratio:' : 'Format:'}
                 <select
                   value={state.aspectRatio}
                   onChange={(e: any) =>
@@ -652,15 +685,15 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   }
                   className="bg-slate-100 border border-slate-300 rounded px-2 py-1 text-slate-900 font-bold focus:outline-none focus:border-amber-500"
                 >
-                  <option value="16:9">16:9 (Kino / TV)</option>
-                  <option value="9:16">9:16 (TikTok / Shorts)</option>
-                  <option value="1:1">1:1 (Quadrat)</option>
-                  <option value="2.39:1">2.39:1 (Anamorph Widescreen)</option>
+                  <option value="16:9">{isEn ? '16:9 (Cinema / TV)' : '16:9 (Kino / TV)'}</option>
+                  <option value="9:16">{isEn ? '9:16 (TikTok / Shorts)' : '9:16 (TikTok / Shorts)'}</option>
+                  <option value="1:1">{isEn ? '1:1 (Square)' : '1:1 (Quadrat)'}</option>
+                  <option value="2.39:1">{isEn ? '2.39:1 (Anamorphic Widescreen)' : '2.39:1 (Anamorph Widescreen)'}</option>
                 </select>
               </span>
 
               <span className="flex items-center gap-1.5 font-medium">
-                Dauer:
+                {isEn ? 'Duration:' : 'Dauer:'}
                 <select
                   value={state.durationSeconds}
                   onChange={(e: any) =>
@@ -671,11 +704,11 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   }
                   className="bg-slate-100 border border-slate-300 rounded px-2 py-1 text-slate-900 font-bold focus:outline-none focus:border-amber-500"
                 >
-                  <option value={3}>3s Clip</option>
-                  <option value={6}>6s Standard (MiniMax H3)</option>
-                  <option value={10}>10s Verlängert</option>
-                  <option value={12}>12s Studio Trailer (12 Sec)</option>
-                  <option value={14}>14s Extended Director Cut (14s) (Standard)</option>
+                  <option value={3}>{isEn ? '3s Clip' : '3s Clip'}</option>
+                  <option value={6}>{isEn ? '6s Standard (MiniMax H3)' : '6s Standard (MiniMax H3)'}</option>
+                  <option value={10}>{isEn ? '10s Extended' : '10s Verlängert'}</option>
+                  <option value={12}>{isEn ? '12s Studio Trailer (12 Sec)' : '12s Studio Trailer (12 Sek)'}</option>
+                  <option value={14}>{isEn ? '14s Extended Director Cut (14s) (Standard)' : '14s Extended Director Cut (14s) (Standard)'}</option>
                 </select>
               </span>
             </div>
@@ -687,14 +720,16 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
               <Layers className="w-4 h-4 text-amber-500" />
-              Windows & Shot Sequence ({state.windows.length} Windows = {state.windows.length * 3} Sekunden)
+              {isEn
+                ? `Windows & Shot Sequence (${state.windows.length} Windows = ${state.windows.length * 3} Seconds)`
+                : `Windows & Shot Sequence (${state.windows.length} Windows = ${state.windows.length * 3} Sekunden)`}
             </h3>
             <button
               onClick={handleAddWindow}
-              className="text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg border border-amber-300 transition-colors flex items-center gap-1"
+              className="text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg border border-amber-300 transition-colors flex items-center gap-1 cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              Window {state.windows.length + 1} hinzufügen
+              {isEn ? `Add Window ${state.windows.length + 1}` : `Window ${state.windows.length + 1} hinzufügen`}
             </button>
           </div>
 
@@ -719,18 +754,18 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(win.prompt);
-                        if (onShowToast) onShowToast(`Window ${win.windowNumber} Prompt kopiert!`);
+                        if (onShowToast) onShowToast(isEn ? `Window ${win.windowNumber} prompt copied!` : `Window ${win.windowNumber} Prompt kopiert!`);
                       }}
-                      className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                      title="Prompt dieses Windows kopieren"
+                      className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                      title={isEn ? 'Copy prompt for this window' : 'Prompt dieses Windows kopieren'}
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                     {state.windows.length > 1 && (
                       <button
                         onClick={() => handleRemoveWindow(win.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                        title="Window löschen"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title={isEn ? 'Delete window' : 'Window löschen'}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -742,21 +777,25 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   <div className="space-y-2">
                     <div>
                       <label className="text-[11px] font-bold text-slate-700">
-                        Szenen-Visuelles & Kamera-Aktion (Referenz als picture 1, picture 2 nutzen):
+                        {isEn
+                          ? 'Scene Visuals & Camera Action (use picture 1, picture 2 as reference):'
+                          : 'Szenen-Visuelles & Kamera-Aktion (Referenz als picture 1, picture 2 nutzen):'}
                       </label>
                       <textarea
                         value={win.prompt}
                         onChange={(e) =>
                           handleUpdateWindow(win.id, { prompt: e.target.value })
                         }
-                        placeholder={`Shot ${win.windowNumber} Visuals... z.B. Person (picture 1) betritt den Raum...`}
+                        placeholder={isEn ? `Shot ${win.windowNumber} Visuals... e.g. Person (picture 1) enters the room...` : `Shot ${win.windowNumber} Visuals... z.B. Person (picture 1) betritt den Raum...`}
                         className="w-full h-20 bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500 font-sans resize-none"
                       />
                     </div>
 
                     <div>
                       <label className="text-[11px] font-bold text-slate-700">
-                        Sprecher / Dialog / Whisper in Shot {win.windowNumber}:
+                        {isEn
+                          ? `Speaker / Dialogue / Whisper in Shot ${win.windowNumber}:`
+                          : `Sprecher / Dialog / Whisper in Shot ${win.windowNumber}:`}
                       </label>
                       <input
                         type="text"
@@ -764,7 +803,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                         onChange={(e) =>
                           handleUpdateWindow(win.id, { dialogue: e.target.value })
                         }
-                        placeholder='z.B. Narrator: "The light went dark."'
+                        placeholder={isEn ? 'e.g. Narrator: "The light went dark."' : 'z.B. Narrator: "The light went dark."'}
                         className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500"
                       />
                     </div>
@@ -773,7 +812,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   <div className="space-y-2">
                     <div>
                       <label className="text-[11px] font-bold text-slate-700">
-                        Kamera-Trajektorie / Bewegung:
+                        {isEn ? 'Camera Trajectory / Motion:' : 'Kamera-Trajektorie / Bewegung:'}
                       </label>
                       <input
                         type="text"
@@ -783,14 +822,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                             cameraTrajectory: e.target.value,
                           })
                         }
-                        placeholder="z.B. Sweeping aerial view over rocky island"
+                        placeholder={isEn ? 'e.g. Sweeping aerial view over rocky island' : 'z.B. Sweeping aerial view over rocky island'}
                         className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500"
                       />
                     </div>
 
                     <div>
                       <label className="text-[11px] font-bold text-slate-700">
-                        Kontinuitäts-Notiz (Maestro Link):
+                        {isEn ? 'Continuity Note (Maestro Link):' : 'Kontinuitäts-Notiz (Maestro Link):'}
                       </label>
                       <input
                         type="text"
@@ -800,14 +839,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                             continuityNote: e.target.value,
                           })
                         }
-                        placeholder={`Fortführung der Bewegung aus Shot ${idx > 0 ? idx : 1}`}
+                        placeholder={isEn ? `Continuity from Shot ${idx > 0 ? idx : 1}` : `Fortführung der Bewegung aus Shot ${idx > 0 ? idx : 1}`}
                         className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500"
                       />
                     </div>
 
                     <div>
                       <label className="text-[11px] font-bold text-slate-700">
-                        Sound Impact / SFX Cue:
+                        {isEn ? 'Sound Impact / SFX Cue:' : 'Sound Impact / SFX Cue:'}
                       </label>
                       <input
                         type="text"
@@ -815,7 +854,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                         onChange={(e) =>
                           handleUpdateWindow(win.id, { sfxImpact: e.target.value })
                         }
-                        placeholder="z.B. Heavy trailer impact."
+                        placeholder={isEn ? 'e.g. Heavy trailer impact.' : 'z.B. Heavy trailer impact.'}
                         className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500"
                       />
                     </div>
@@ -827,14 +866,16 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         </div>
       )}
 
-      {/* 4. KLICK-SYSTEM PARAMETER SECTIONS */}
+      {/* 4. PARAMETER SECTIONS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-        {/* SECTION 1: KAMERA-FAHRT */}
+        {/* SECTION 1: CAMERA MOTION */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-xs">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
               <Camera className="w-4 h-4 text-amber-600" />
-              <h3 className="font-extrabold text-sm text-slate-900">Kamera-Fahrt & Bewegung</h3>
+              <h3 className="font-extrabold text-sm text-slate-900">
+                {isEn ? 'Camera Motion & Movement' : 'Kamera-Fahrt & Bewegung'}
+              </h3>
             </div>
             {state.cameraMotion && (
               <span className="text-[11px] text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 font-mono font-bold truncate max-w-[200px]" title={state.cameraMotion}>
@@ -848,14 +889,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               <button
                 type="button"
                 onClick={() => setState((prev) => ({ ...prev, cameraMotion: '' }))}
-                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden"
+                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden cursor-pointer"
               >
                 <span className="absolute top-1 right-2 text-[8px] bg-emerald-600 text-white font-extrabold px-1 py-0.2 rounded uppercase animate-pulse">
-                  Vorlage aktiv
+                  {isEn ? 'Preset Active' : 'Vorlage aktiv'}
                 </span>
                 <div className="font-extrabold text-emerald-950 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  Spezial-Kamera (Vorlage)
+                  {isEn ? 'Custom Camera (Preset)' : 'Spezial-Kamera (Vorlage)'}
                 </div>
                 <div className="text-[10px] text-emerald-800 mt-0.5 line-clamp-1 font-mono">
                   {state.cameraMotion}
@@ -868,13 +909,13 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                 <button
                   key={opt.id}
                   onClick={() => handleSelectOption('cameraMotion', opt.value)}
-                  className={`text-left p-2.5 rounded-xl border text-xs transition-all ${
+                  className={`text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="font-bold text-slate-900">{opt.labelDe}</div>
+                  <div className="font-bold text-slate-900">{isEn ? opt.label : opt.labelDe}</div>
                   <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
                     {opt.description}
                   </div>
@@ -884,12 +925,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
           </div>
         </div>
 
-        {/* SECTION 2: BELEUCHTUNG */}
+        {/* SECTION 2: LIGHTING */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-xs">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
               <Sun className="w-4 h-4 text-amber-600" />
-              <h3 className="font-extrabold text-sm text-slate-900">Beleuchtung & Stimmung</h3>
+              <h3 className="font-extrabold text-sm text-slate-900">
+                {isEn ? 'Lighting & Atmosphere' : 'Beleuchtung & Stimmung'}
+              </h3>
             </div>
             {state.lighting && (
               <span className="text-[11px] text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 font-mono font-bold truncate max-w-[200px]" title={state.lighting}>
@@ -903,14 +946,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               <button
                 type="button"
                 onClick={() => setState((prev) => ({ ...prev, lighting: '' }))}
-                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden"
+                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden cursor-pointer"
               >
                 <span className="absolute top-1 right-2 text-[8px] bg-emerald-600 text-white font-extrabold px-1 py-0.2 rounded uppercase animate-pulse">
-                  Vorlage aktiv
+                  {isEn ? 'Preset Active' : 'Vorlage aktiv'}
                 </span>
                 <div className="font-extrabold text-emerald-950 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  Spezial-Beleuchtung (Vorlage)
+                  {isEn ? 'Custom Lighting (Preset)' : 'Spezial-Beleuchtung (Vorlage)'}
                 </div>
                 <div className="text-[10px] text-emerald-800 mt-0.5 line-clamp-1 font-mono">
                   {state.lighting}
@@ -923,13 +966,13 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                 <button
                   key={opt.id}
                   onClick={() => handleSelectOption('lighting', opt.value)}
-                  className={`text-left p-2.5 rounded-xl border text-xs transition-all ${
+                  className={`text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="font-bold text-slate-900">{opt.labelDe}</div>
+                  <div className="font-bold text-slate-900">{isEn ? opt.label : opt.labelDe}</div>
                   <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
                     {opt.description}
                   </div>
@@ -939,12 +982,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
           </div>
         </div>
 
-        {/* SECTION 3: LINSEN */}
+        {/* SECTION 3: LENS */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-xs">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
               <Aperture className="w-4 h-4 text-amber-600" />
-              <h3 className="font-extrabold text-sm text-slate-900">Linsen & Render-Ästhetik</h3>
+              <h3 className="font-extrabold text-sm text-slate-900">
+                {isEn ? 'Lens & Render Aesthetic' : 'Linsen & Render-Ästhetik'}
+              </h3>
             </div>
             {state.lensStyle && (
               <span className="text-[11px] text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 font-mono font-bold truncate max-w-[200px]" title={state.lensStyle}>
@@ -958,14 +1003,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               <button
                 type="button"
                 onClick={() => setState((prev) => ({ ...prev, lensStyle: '' }))}
-                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden"
+                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden cursor-pointer"
               >
                 <span className="absolute top-1 right-2 text-[8px] bg-emerald-600 text-white font-extrabold px-1 py-0.2 rounded uppercase animate-pulse">
-                  Vorlage aktiv
+                  {isEn ? 'Preset Active' : 'Vorlage aktiv'}
                 </span>
                 <div className="font-extrabold text-emerald-950 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  Spezial-Linsen & Look (Vorlage)
+                  {isEn ? 'Custom Lens & Look (Preset)' : 'Spezial-Linsen & Look (Vorlage)'}
                 </div>
                 <div className="text-[10px] text-emerald-800 mt-0.5 line-clamp-1 font-mono">
                   {state.lensStyle}
@@ -978,13 +1023,13 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                 <button
                   key={opt.id}
                   onClick={() => handleSelectOption('lensStyle', opt.value)}
-                  className={`text-left p-2.5 rounded-xl border text-xs transition-all ${
+                  className={`text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="font-bold text-slate-900">{opt.labelDe}</div>
+                  <div className="font-bold text-slate-900">{isEn ? opt.label : opt.labelDe}</div>
                   <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
                     {opt.label}
                   </div>
@@ -994,12 +1039,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
           </div>
         </div>
 
-        {/* SECTION 4: GESCHWINDIGKEIT */}
+        {/* SECTION 4: SPEED */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-xs">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
               <Gauge className="w-4 h-4 text-amber-600" />
-              <h3 className="font-extrabold text-sm text-slate-900">Bewegungs-Geschwindigkeit</h3>
+              <h3 className="font-extrabold text-sm text-slate-900">
+                {isEn ? 'Motion Speed & Frame Rate' : 'Bewegungs-Geschwindigkeit'}
+              </h3>
             </div>
             {state.motionSpeed && (
               <span className="text-[11px] text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 font-mono font-bold truncate max-w-[200px]" title={state.motionSpeed}>
@@ -1013,14 +1060,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               <button
                 type="button"
                 onClick={() => setState((prev) => ({ ...prev, motionSpeed: '' }))}
-                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden"
+                className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden cursor-pointer"
               >
                 <span className="absolute top-1 right-2 text-[8px] bg-emerald-600 text-white font-extrabold px-1 py-0.2 rounded uppercase animate-pulse">
-                  Vorlage aktiv
+                  {isEn ? 'Preset Active' : 'Vorlage aktiv'}
                 </span>
                 <div className="font-extrabold text-emerald-950 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  Spezial-Geschwindigkeit (Vorlage)
+                  {isEn ? 'Custom Speed (Preset)' : 'Spezial-Geschwindigkeit (Vorlage)'}
                 </div>
                 <div className="text-[10px] text-emerald-800 mt-0.5 line-clamp-1 font-mono">
                   {state.motionSpeed}
@@ -1033,13 +1080,13 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                 <button
                   key={opt.id}
                   onClick={() => handleSelectOption('motionSpeed', opt.value)}
-                  className={`text-left p-2.5 rounded-xl border text-xs transition-all ${
+                  className={`text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="font-bold text-slate-900">{opt.labelDe}</div>
+                  <div className="font-bold text-slate-900">{isEn ? opt.label : opt.labelDe}</div>
                   <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
                     {opt.label}
                   </div>
@@ -1056,7 +1103,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
           <div className="flex items-center gap-2">
             <Volume2 className="w-4 h-4 text-amber-600" />
             <h3 className="font-extrabold text-sm text-slate-900">
-              Audio & Sound-Cues (MiniMax Audio Sync)
+              {isEn ? 'Audio & Sound Cues (MiniMax Audio Sync)' : 'Audio & Sound-Cues (MiniMax Audio Sync)'}
             </h3>
           </div>
           {state.audioCue && (
@@ -1071,14 +1118,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             <button
               type="button"
               onClick={() => setState((prev) => ({ ...prev, audioCue: '' }))}
-              className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden"
+              className="col-span-1 sm:col-span-2 text-left p-2.5 rounded-xl border border-emerald-500 bg-emerald-50 text-slate-950 font-bold shadow-xs relative overflow-hidden cursor-pointer"
             >
               <span className="absolute top-1 right-2 text-[8px] bg-emerald-600 text-white font-extrabold px-1 py-0.2 rounded uppercase animate-pulse">
-                Vorlage aktiv
+                {isEn ? 'Preset Active' : 'Vorlage aktiv'}
               </span>
               <div className="font-extrabold text-emerald-950 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                Spezial-Sound-Cue (Vorlage)
+                {isEn ? 'Custom Sound Cue (Preset)' : 'Spezial-Sound-Cue (Vorlage)'}
               </div>
               <div className="text-[10px] text-emerald-800 mt-0.5 line-clamp-1 font-mono">
                 {state.audioCue}
@@ -1091,13 +1138,13 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               <button
                 key={opt.id}
                 onClick={() => handleSelectOption('audioCue', opt.value)}
-                className={`text-left p-2.5 rounded-xl border text-xs transition-all ${
+                className={`text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                     : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100'
                 }`}
               >
-                <div className="font-bold text-slate-900">{opt.labelDe}</div>
+                <div className="font-bold text-slate-900">{isEn ? opt.label : opt.labelDe}</div>
               </button>
             );
           })}
@@ -1112,10 +1159,12 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               <Flame className="w-5 h-5 text-rose-600 animate-pulse" />
               <div>
                 <h3 className="font-extrabold text-sm text-rose-950">
-                  NSFW & Edge-Keyword Bibliothek (Aktiv)
+                  {isEn ? 'NSFW & Edge Keyword Library (Active)' : 'NSFW & Edge-Keyword Bibliothek (Aktiv)'}
                 </h3>
                 <p className="text-[11px] text-rose-700">
-                  Nutzt kinoreife & anatomische Begriffe für unfilterbare viszerale Intensität in MiniMax H3.
+                  {isEn
+                    ? 'Utilizes cinematic & visceral terms for raw unfilterable intensity in MiniMax H3.'
+                    : 'Nutzt kinoreife & anatomische Begriffe für unfilterbare viszerale Intensität in MiniMax H3.'}
                 </p>
               </div>
             </div>
@@ -1131,14 +1180,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                 <button
                   key={kw.id}
                   onClick={() => handleToggleNsfwKeyword(kw.value)}
-                  className={`text-left p-3 rounded-xl border text-xs transition-all relative ${
+                  className={`text-left p-3 rounded-xl border text-xs transition-all relative cursor-pointer ${
                     isSelected
                       ? 'bg-rose-200 border-rose-500 text-rose-950 font-bold shadow-xs'
                       : 'bg-white border-rose-200 text-slate-800 hover:border-rose-300'
                   }`}
                 >
                   <div className="flex items-center justify-between font-bold text-rose-900 mb-1">
-                    <span>{kw.labelDe}</span>
+                    <span>{isEn ? kw.label : kw.labelDe}</span>
                     {isSelected ? (
                       <X className="w-3.5 h-3.5 text-rose-700" />
                     ) : (

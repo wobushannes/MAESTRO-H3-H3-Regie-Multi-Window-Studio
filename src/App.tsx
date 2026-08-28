@@ -13,6 +13,7 @@ import { PRESET_TEMPLATES } from './data/presets';
 import {
   extractEpicMovieTitle,
   getDialogueFallbackForCategory,
+  getNarratorVoiceFallbackForCategory,
 } from './utils/promptCompiler';
 import {
   PromptBuildState,
@@ -159,6 +160,7 @@ export default function App() {
       appMode: 'pro',
       movieTitle: tpl.movieTitle || extractEpicMovieTitle(tpl.title),
       dialogueLines: tpl.dialogueLines || getDialogueFallbackForCategory(tpl.category, tpl.title),
+      narratorVoice: tpl.narratorVoice || getNarratorVoiceFallbackForCategory(tpl.category, tpl.title),
       styleCode: tpl.styleCode || 'ASTROCINEMAV01K2T',
       wardrobeStyle: tpl.wardrobeStyle || prev.wardrobeStyle,
       clothingDetails: tpl.clothingDetails || prev.clothingDetails,
@@ -364,6 +366,7 @@ export default function App() {
                   onCopyText={handleCopyText}
                   nsfwMode={state.nsfwMode}
                   builtInTemplates={PRESET_TEMPLATES}
+                  language={state.language}
                 />
               )}
 
@@ -374,6 +377,7 @@ export default function App() {
                   onRemoveReference={handleRemoveReference}
                   onInjectTagToPrompt={handleInjectTagToPrompt}
                   onSetReferencesCount={handleSetReferencesCount}
+                  language={state.language}
                 />
               )}
 
@@ -386,6 +390,7 @@ export default function App() {
                   onCopyScript={(script) => handleCopyText(script, 'Maestro Script')}
                   availableReferences={state.referenceImages}
                   rawConcept={state.rawConcept}
+                  language={state.language}
                 />
               )}
 
@@ -398,16 +403,17 @@ export default function App() {
                   savedList={savedList}
                   onLoadSaved={(saved) => {
                     setState(saved.state);
-                    showToast(`Vorlage "${saved.title}" geladen!`);
+                    showToast(state.language === 'en' ? `Preset "${saved.title}" loaded!` : `Vorlage "${saved.title}" geladen!`);
                   }}
                   onRemoveSaved={(id) =>
                     setSavedList((prev) => prev.filter((s) => s.id !== id))
                   }
                   onImportList={(imported) => {
                     setSavedList((prev) => [...imported, ...prev]);
-                    showToast(`${imported.length} Vorlagen importiert!`);
+                    showToast(state.language === 'en' ? `${imported.length} presets imported!` : `${imported.length} Vorlagen importiert!`);
                   }}
                   onCopyText={handleCopyText}
+                  language={state.language}
                 />
               )}
             </>

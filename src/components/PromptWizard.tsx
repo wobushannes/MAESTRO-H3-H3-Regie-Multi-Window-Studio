@@ -1,36 +1,42 @@
 import React, { useState } from 'react';
 import {
   Sparkles,
+  Camera,
+  Sun,
+  Aperture,
+  Volume2,
+  CheckCircle2,
   ArrowRight,
   ArrowLeft,
-  CheckCircle2,
-  Film,
-  Layers,
   Copy,
-  Bookmark,
   Check,
   RotateCcw,
   SlidersHorizontal,
-  Bot,
-  Clock,
+  Bookmark,
   BookOpen,
-  Tag,
-  ImageIcon,
-  Shirt,
+  Film,
+  Layers,
   Search,
+  Bot,
+  Tag,
+  Image as ImageIcon,
+  Shirt,
+  Mic,
 } from 'lucide-react';
 import { PromptBuildState, PresetTemplate } from '../types';
-import { PRESET_TEMPLATES } from '../data/presets';
 import {
-  WARDROBE_OPTIONS,
   CAMERA_OPTIONS,
   LIGHTING_OPTIONS,
   LENS_AESTHETIC_OPTIONS,
   AUDIO_CUE_OPTIONS,
+  WARDROBE_OPTIONS,
+  NARRATOR_VOICE_OPTIONS,
 } from '../data/parameters';
+import { PRESET_TEMPLATES } from '../data/presets';
 import {
   compileCleanVisualVideoPrompt,
   compileStudioTheatricalScript,
+  getNarratorVoiceFallbackForCategory,
 } from '../utils/promptCompiler';
 
 interface PromptWizardProps {
@@ -41,26 +47,38 @@ interface PromptWizardProps {
   onShowToast: (msg: string) => void;
 }
 
-export const PromptWizard = ({
+export const PromptWizard: React.FC<PromptWizardProps> = ({
   state,
   setState,
   onSwitchToProMode,
   onSavePreset,
   onShowToast,
-}: PromptWizardProps) => {
-  const [currentStep, setCurrentStep] = useState<number>(1);
+}) => {
+  const isEn = state.language === 'en';
+  const [currentStep, setCurrentStep] = useState(1);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [showPresetModal, setShowPresetModal] = useState(false);
   const [presetSearch, setPresetSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  // Available Reference Anchors for quick injection in Wizard - ALWAYS picture 1, picture 2, picture 3...
+  // Available reference tags
   const referenceTags = [
-    { tag: 'picture 1', label: '👤 Erstes Bild / Haupt-Subjekt', desc: 'Verankert Bild 1 als Hauptcharakter / Gesicht' },
-    { tag: 'picture 2', label: '🖼️ Zweites Bild / Stil', desc: 'Verankert Bild 2 als Stil / Umgebung' },
-    { tag: 'picture 3', label: '🎬 Drittes Bild', desc: 'Verankert Bild 3' },
-    { tag: 'picture 4', label: '🏛️ Viertes Bild', desc: 'Verankert Bild 4' },
+    { tag: 'picture 1', label: isEn ? 'Main Subject / Face' : 'Haupt-Subjekt / Gesicht' },
+    { tag: 'picture 2', label: isEn ? 'Style / Environment' : 'Stil / Umgebung' },
+    { tag: 'picture 3', label: isEn ? 'Prop / Action Object' : 'Requisite / Objekt' },
   ];
+
+  const handleInjectTag = (tag: string) => {
+    setState((prev) => {
+      const existing = prev.rawConcept;
+      const space = existing.length > 0 && !existing.endsWith(' ') ? ' ' : '';
+      return {
+        ...prev,
+        rawConcept: `${existing}${space}(${tag})`,
+      };
+    });
+    onShowToast(isEn ? `Tag "(${tag})" added to prompt!` : `Tag "(${tag})" zum Prompt hinzugefügt!`);
+  };
 
   const handleSetReferenceCount = (count: number) => {
     setState((prev) => {
@@ -73,37 +91,25 @@ export const PromptWizard = ({
         for (let i = current.length + 1; i <= count; i++) {
           current.push({
             id: `ref-wiz-${Date.now()}-${i}`,
-            label: i === 1 ? 'Subjekt-Referenz' : i === 2 ? 'Stil-Referenz' : `Referenzbild ${i}`,
+            label: i === 1 ? (isEn ? 'Subject Reference' : 'Subjekt-Referenz') : i === 2 ? (isEn ? 'Style Reference' : 'Stil-Referenz') : (isEn ? `Reference Image ${i}` : `Referenzbild ${i}`),
             tag: `picture ${i}`,
             role: i === 1 ? 'subject' : 'style',
             url: i === 1
               ? 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80'
               : 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80',
-            description: i === 1 ? 'Hauptcharakter / Subjekt Anker' : `Referenz Bild ${i}`,
+            description: i === 1 ? (isEn ? 'Main Character / Face Anchor' : 'Hauptcharakter / Gesichts-Anker') : (isEn ? `Reference Picture ${i}` : `Referenz Bild ${i}`),
           });
         }
       }
       return { ...prev, referenceImages: current };
     });
     if (count === 1) {
-      onShowToast('🖼️ Exakt 1 Referenzbild (picture 1) gewählt!');
+      onShowToast(isEn ? '🖼️ Exactly 1 reference image (picture 1) active!' : '🖼️ Exakt 1 Referenzbild (picture 1) aktiv!');
     } else if (count === 0) {
-      onShowToast('🚫 Referenzbilder deaktiviert (0 Bilder)');
+      onShowToast(isEn ? '🚫 Reference images deactivated (0 images)' : '🚫 Referenzbilder deaktiviert (0 Bilder)');
     } else {
-      onShowToast(`🖼️ ${count} Referenzbilder gewählt!`);
+      onShowToast(isEn ? `🖼️ ${count} reference images selected!` : `🖼️ ${count} Referenzbilder gewählt!`);
     }
-  };
-
-  const handleInjectTag = (tag: string) => {
-    setState((prev) => {
-      const existing = prev.rawConcept;
-      const space = existing.length > 0 && !existing.endsWith(' ') ? ' ' : '';
-      return {
-        ...prev,
-        rawConcept: `${existing}${space}(${tag})`,
-      };
-    });
-    onShowToast(`🏷️ Tag (${tag}) in die Beschreibung eingefügt!`);
   };
 
   const handleApplyPreset = (preset: PresetTemplate) => {
@@ -111,26 +117,33 @@ export const PromptWizard = ({
       const newState: PromptBuildState = {
         ...prev,
         rawConcept: preset.prompt,
-        movieTitle: preset.title.replace(/\(.*\)/, '').trim(),
-        wardrobeStyle: preset.wardrobeStyle || prev.wardrobeStyle,
-        clothingDetails: preset.clothingDetails || prev.clothingDetails,
-        cameraMotion: preset.camera || prev.cameraMotion,
-        lighting: preset.lighting || prev.lighting,
-        lensStyle: preset.lens || prev.lensStyle,
-        audioCue: preset.audioCue || prev.audioCue,
-        motionSpeed: preset.motionSpeed || prev.motionSpeed,
-        negativePrompt: preset.negativePrompt || prev.negativePrompt,
+        cameraMotion: preset.camera,
+        lighting: preset.lighting,
+        lensStyle: preset.lens,
+        motionSpeed: preset.motionSpeed || '24fps Normal',
+        audioCue: preset.audioCue || '',
+        negativePrompt: preset.negativePrompt,
+        styleCode: preset.styleCode || 'ASTROCINEMAV01K2T',
+        wardrobeStyle: preset.wardrobeStyle || '',
+        clothingDetails: preset.clothingDetails || '',
+        movieTitle: preset.movieTitle || preset.title.toUpperCase(),
+        dialogueLines: preset.dialogueLines || '',
+        narratorVoice: preset.narratorVoice || getNarratorVoiceFallbackForCategory(preset.category, preset.title),
+        characterPersonaDescription: preset.characterPersonaDescription || '',
       };
 
       if (preset.windowsCount && preset.windowsCount > 1) {
         newState.generatorMode = 'multi';
-        newState.windows = Array.from({ length: preset.windowsCount }).map((_, idx) => ({
-          id: `win-wiz-preset-${Date.now()}-${idx + 1}`,
-          windowNumber: idx + 1,
-          timeRange: `${idx * 3}s - ${(idx + 1) * 3}s`,
-          prompt: idx === 0 ? preset.prompt : `Weiterführung der Szene (${preset.title}) - Window ${idx + 1}`,
-          cameraTrajectory: preset.camera || 'Dynamische Kameraweiterführung',
-          continuityNote: `Nahtlose Kontinuität aus Window ${idx}`,
+        newState.windows = Array.from({ length: preset.windowsCount }, (_, i) => i + 1).map((idx) => ({
+          id: `win-wiz-${Date.now()}-${idx}`,
+          windowNumber: idx,
+          timeRange: `${(idx - 1) * 3}s - ${idx * 3}s`,
+          prompt:
+            idx === 1
+              ? preset.prompt
+              : isEn ? `Continuation of action in Window ${idx}` : `Fortführung der Handlung in Window ${idx}`,
+          cameraTrajectory: preset.camera || (isEn ? 'Dynamic camera continuation' : 'Dynamische Kameraweiterführung'),
+          continuityNote: isEn ? `Seamless continuity from Window ${idx - 1}` : `Nahtlose Kontinuität aus Window ${idx - 1}`,
           motionSpeed: preset.motionSpeed || '24fps Normal',
           referenceImages: [],
         }));
@@ -142,7 +155,7 @@ export const PromptWizard = ({
     });
 
     setShowPresetModal(false);
-    onShowToast(`✨ Vorlage "${preset.title}" geladen!`);
+    onShowToast(isEn ? `✨ Template "${preset.title}" loaded!` : `✨ Vorlage "${preset.title}" geladen!`);
   };
 
   // Set Multi-Window Quantity helper
@@ -157,9 +170,9 @@ export const PromptWizard = ({
             id: `win-wiz-${Date.now()}-${i}`,
             windowNumber: i,
             timeRange: `${startSec}s - ${endSec}s`,
-            prompt: i === 1 ? prev.rawConcept || 'Szene Start' : `Fortführung der Bewegung in Window ${i}`,
-            cameraTrajectory: prev.cameraMotion || 'Nahtlose Kamera-Weiterführung',
-            continuityNote: `Kontinuität aus Window ${i - 1}`,
+            prompt: i === 1 ? prev.rawConcept || (isEn ? 'Scene start' : 'Szene Start') : (isEn ? `Continuation in Window ${i}` : `Fortführung der Bewegung in Window ${i}`),
+            cameraTrajectory: prev.cameraMotion || (isEn ? 'Seamless camera continuation' : 'Nahtlose Kamera-Weiterführung'),
+            continuityNote: isEn ? `Continuity from Window ${i - 1}` : `Kontinuität aus Window ${i - 1}`,
             motionSpeed: '24fps Normal',
             referenceImages: [],
           });
@@ -172,14 +185,14 @@ export const PromptWizard = ({
   };
 
   const steps = [
-    { num: 1, title: 'Idee & Thema' },
-    { num: 2, title: 'Mode & Kleidung' },
-    { num: 3, title: 'Clip vs. Multi-Window' },
-    { num: 4, title: 'Kamera & Fahrt' },
-    { num: 5, title: 'Licht & Atmosphäre' },
-    { num: 6, title: 'Optik & Linsen' },
-    { num: 7, title: 'Audio & Format' },
-    { num: 8, title: 'Fertiger Prompt' },
+    { num: 1, title: isEn ? 'Idea & Concept' : 'Idee & Thema' },
+    { num: 2, title: isEn ? 'Wardrobe & Style' : 'Mode & Kleidung' },
+    { num: 3, title: isEn ? 'Clip vs. Multi-Window' : 'Clip vs. Multi-Window' },
+    { num: 4, title: isEn ? 'Camera Motion' : 'Kamera & Fahrt' },
+    { num: 5, title: isEn ? 'Lighting & Mood' : 'Licht & Atmosphäre' },
+    { num: 6, title: isEn ? 'Lens & Optics' : 'Optik & Linsen' },
+    { num: 7, title: isEn ? 'Audio & Format' : 'Audio & Format' },
+    { num: 8, title: isEn ? 'Final Prompt' : 'Fertiger Prompt' },
   ];
 
   // Filter presets for modal
@@ -204,7 +217,7 @@ export const PromptWizard = ({
         : compileMaestroScript();
     navigator.clipboard.writeText(text);
     setCopiedPrompt(true);
-    onShowToast('📋 Sauberen Video-Prompt kopiert!');
+    onShowToast(isEn ? '📋 Clean video prompt copied!' : '📋 Sauberen Video-Prompt kopiert!');
     setTimeout(() => setCopiedPrompt(false), 2000);
   };
 
@@ -220,24 +233,26 @@ export const PromptWizard = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-extrabold tracking-tight">
-                  Dialogmodus: Prompting-Assistent (Wizard)
+                  {isEn ? 'Dialog Mode: Prompting Assistant (Wizard)' : 'Dialogmodus: Prompting-Assistent (Wizard)'}
                 </h2>
                 <span className="px-2 py-0.5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-full uppercase">
-                  Geführt
+                  {isEn ? 'Guided' : 'Geführt'}
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1 max-w-xl">
-                Erstelle deinen Studio-Trailer inkl. Mode, Kleidung, Referenzbildern (picture 1, picture 2) & Multi-Window Logik!
+                {isEn
+                  ? 'Build your studio trailer including wardrobe, clothing, reference pictures (picture 1, picture 2) & multi-window logic!'
+                  : 'Erstelle deinen Studio-Trailer inkl. Mode, Kleidung, Referenzbildern (picture 1, picture 2) & Multi-Window Logik!'}
               </p>
             </div>
           </div>
 
           <button
             onClick={onSwitchToProMode}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-amber-300 border border-amber-400/30 rounded-xl text-xs font-extrabold transition-all shrink-0 self-start md:self-auto"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-amber-300 border border-amber-400/30 rounded-xl text-xs font-extrabold transition-all shrink-0 self-start md:self-auto cursor-pointer"
           >
             <SlidersHorizontal className="w-4 h-4 text-amber-400" />
-            Zum Profimodus wechseln
+            {isEn ? 'Switch to Pro Mode' : 'Zum Profimodus wechseln'}
           </button>
         </div>
 
@@ -251,7 +266,7 @@ export const PromptWizard = ({
                 <button
                   key={s.num}
                   onClick={() => setCurrentStep(s.num)}
-                  className={`flex flex-col items-center gap-1.5 transition-all text-center group ${
+                  className={`flex flex-col items-center gap-1.5 transition-all text-center group cursor-pointer ${
                     isCurrent
                       ? 'text-amber-400 font-extrabold'
                       : isCompleted
@@ -292,10 +307,10 @@ export const PromptWizard = ({
                 </span>
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">
-                    Was möchtest du in deinem Video zeigen?
+                    {isEn ? 'What do you want to show in your video?' : 'Was möchtest du in deinem Video zeigen?'}
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Beschreibe die Szene oder wähle aus der Vorlagen-Bibliothek.
+                    {isEn ? 'Describe your scene or choose from the curated templates library.' : 'Beschreibe die Szene oder wähle aus der Vorlagen-Bibliothek.'}
                   </p>
                 </div>
               </div>
@@ -303,10 +318,10 @@ export const PromptWizard = ({
               {/* Big Template Library Button */}
               <button
                 onClick={() => setShowPresetModal(true)}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs shadow-md transition-all shrink-0"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs shadow-md transition-all shrink-0 cursor-pointer"
               >
                 <BookOpen className="w-4 h-4" />
-                Fertige Vorlage wählen ({PRESET_TEMPLATES.length}+ Vorlagen)
+                {isEn ? `Select Template (${PRESET_TEMPLATES.length}+ Presets)` : `Fertige Vorlage wählen (${PRESET_TEMPLATES.length}+ Vorlagen)`}
               </button>
             </div>
 
@@ -316,7 +331,7 @@ export const PromptWizard = ({
                 <div className="flex items-center gap-2">
                   <ImageIcon className="w-4 h-4 text-amber-700" />
                   <span className="text-xs font-extrabold text-slate-900">
-                    Referenzbilder-Anzahl wählen (0, 1, 2, 3):
+                    {isEn ? 'Select Reference Images Count (0, 1, 2, 3):' : 'Referenzbilder-Anzahl wählen (0, 1, 2, 3):'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -327,17 +342,17 @@ export const PromptWizard = ({
                         key={num}
                         type="button"
                         onClick={() => handleSetReferenceCount(num)}
-                        className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all border ${
+                        className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
                           isSelected
                             ? 'bg-amber-600 text-white border-amber-700 shadow-xs'
                             : 'bg-white text-slate-800 border-slate-300 hover:bg-amber-100'
                         }`}
                       >
                         {num === 0
-                          ? '0 Bilder'
+                          ? (isEn ? '0 Images' : '0 Bilder')
                           : num === 1
-                          ? 'Exakt 1 Bild (picture 1)'
-                          : `${num} Bilder (picture 1–${num})`}
+                          ? (isEn ? 'Exactly 1 Image (picture 1)' : 'Exakt 1 Bild (picture 1)')
+                          : (isEn ? `${num} Images (picture 1–${num})` : `${num} Bilder (picture 1–${num})`)}
                       </button>
                     );
                   })}
@@ -347,14 +362,14 @@ export const PromptWizard = ({
               {state.referenceImages.length > 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[11px] font-bold text-slate-700">
-                    Tag im Prompt verankern:
+                    {isEn ? 'Anchor tag in prompt:' : 'Tag im Prompt verankern:'}
                   </span>
                   {state.referenceImages.map((ref, idx) => (
                     <button
                       key={ref.id}
                       type="button"
                       onClick={() => handleInjectTag(`picture ${idx + 1}`)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-amber-100 text-amber-950 font-mono text-xs font-extrabold border border-amber-300 rounded-xl shadow-2xs transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-amber-100 text-amber-950 font-mono text-xs font-extrabold border border-amber-300 rounded-xl shadow-2xs transition-all cursor-pointer"
                     >
                       <Tag className="w-3 h-3 text-amber-600" />
                       <span>picture {idx + 1}</span>
@@ -366,7 +381,7 @@ export const PromptWizard = ({
                 </div>
               ) : (
                 <div className="text-[11px] text-slate-500 italic">
-                  Keine Referenzbilder gewählt (0 Bilder).
+                  {isEn ? 'No reference images selected (0 images).' : 'Keine Referenzbilder gewählt (0 Bilder).'}
                 </div>
               )}
             </div>
@@ -374,14 +389,14 @@ export const PromptWizard = ({
             {/* Quick Inspiration Featured Horror & Styles */}
             <div className="space-y-2">
               <label className="text-xs font-extrabold text-slate-800 block">
-                Beliebte Schnell-Vorlagen (Horror, Lovecraft, Alien, Bau, Immobilien, Food):
+                {isEn ? 'Popular Quick Presets (Horror, Lovecraft, Alien, Construction, Real Estate, Food):' : 'Beliebte Schnell-Vorlagen (Horror, Lovecraft, Alien, Bau, Immobilien, Food):'}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                 {PRESET_TEMPLATES.slice(0, 6).map((tpl) => (
                   <button
                     key={tpl.id}
                     onClick={() => handleApplyPreset(tpl)}
-                    className="text-left p-3 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-400 rounded-xl text-xs transition-all space-y-1 group"
+                    className="text-left p-3 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-400 rounded-xl text-xs transition-all space-y-1 group cursor-pointer"
                   >
                     <div className="flex items-center justify-between gap-1">
                       <span className="font-extrabold text-slate-900 line-clamp-1 group-hover:text-amber-900">
@@ -407,10 +422,10 @@ export const PromptWizard = ({
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-extrabold text-slate-900 block">
-                  Film- / Abspann-Titel (Eingabe für Abspann-Titelkarte):
+                  {isEn ? 'Movie / Screenplay Title (for title card outro):' : 'Film- / Abspann-Titel (Eingabe für Abspann-Titelkarte):'}
                 </label>
                 <span className="text-[10px] text-amber-700 font-bold">
-                  Wird am Ende im Abspann eingeblendet
+                  {isEn ? 'Displayed on ending title card' : 'Wird am Ende im Abspann eingeblendet'}
                 </span>
               </div>
               <input
@@ -419,7 +434,7 @@ export const PromptWizard = ({
                 onChange={(e) =>
                   setState((prev) => ({ ...prev, movieTitle: e.target.value }))
                 }
-                placeholder="z.B. DAS ERWACHEN DES BÖSEN, THE LAST LIGHTHOUSE, CTHULHU RISING"
+                placeholder={isEn ? 'e.g. THE LAST LIGHTHOUSE, CTHULHU RISING, NEON PROTOCOL' : 'z.B. DAS ERWACHEN DES BÖSEN, THE LAST LIGHTHOUSE, CTHULHU RISING'}
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-extrabold text-amber-950 focus:bg-white focus:outline-none focus:border-amber-500"
               />
             </div>
@@ -428,14 +443,14 @@ export const PromptWizard = ({
             <div className="space-y-2 pt-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-extrabold text-slate-900 block">
-                  Deine eigene Szenen-Beschreibung / Prompt-Text:
+                  {isEn ? 'Your Scene Concept / Custom Prompt Text:' : 'Deine eigene Szenen-Beschreibung / Prompt-Text:'}
                 </label>
                 {state.rawConcept && (
                   <button
                     onClick={() => setState((prev) => ({ ...prev, rawConcept: '' }))}
-                    className="text-[10px] text-slate-400 hover:text-rose-600 font-bold"
+                    className="text-[10px] text-slate-400 hover:text-rose-600 font-bold cursor-pointer"
                   >
-                    Text löschen
+                    {isEn ? 'Clear text' : 'Text löschen'}
                   </button>
                 )}
               </div>
@@ -444,7 +459,7 @@ export const PromptWizard = ({
                 onChange={(e) =>
                   setState((prev) => ({ ...prev, rawConcept: e.target.value }))
                 }
-                placeholder="Schreibe hier, was im Video passiert... Verwende (picture 1) für dein Gesicht oder Haupt-Subjekt!"
+                placeholder={isEn ? 'Describe what happens in your video... Use (picture 1) for your face or main subject!' : 'Schreibe hier, was im Video passiert... Verwende (picture 1) für dein Gesicht oder Haupt-Subjekt!'}
                 className="w-full h-36 bg-slate-50 border border-slate-300 rounded-xl p-3.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500 font-sans resize-none leading-relaxed"
               />
             </div>
@@ -461,17 +476,17 @@ export const PromptWizard = ({
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                   <Shirt className="w-5 h-5 text-amber-600" />
-                  Mode, Kleidung & Character Styling entscheiden
+                  {isEn ? 'Fashion, Wardrobe & Character Styling' : 'Mode, Kleidung & Character Styling entscheiden'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Bestimme exakt, welche Kleidung, Stoffe und Accessoires dein Charakter im Video trägt.
+                  {isEn ? 'Define exact clothing, materials and accessories your character wears in the video.' : 'Bestimme exakt, welche Kleidung, Stoffe und Accessoires dein Charakter im Video trägt.'}
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
               <label className="text-xs font-extrabold text-slate-800 block">
-                Schnellauswahl Outfit-Kategorien:
+                {isEn ? 'Quick Select Outfit Categories:' : 'Schnellauswahl Outfit-Kategorien:'}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
                 {WARDROBE_OPTIONS.map((opt) => {
@@ -494,13 +509,13 @@ export const PromptWizard = ({
                           }));
                         }
                       }}
-                      className={`text-left p-3 rounded-xl border text-xs transition-all ${
+                      className={`text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                           : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
                       }`}
                     >
-                      <div className="font-extrabold text-slate-900">{opt.labelDe}</div>
+                      <div className="font-extrabold text-slate-900">{isEn ? opt.label : opt.labelDe}</div>
                       <div className="text-[10px] text-slate-500 mt-1 line-clamp-2">
                         {opt.description}
                       </div>
@@ -513,7 +528,7 @@ export const PromptWizard = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
               <div>
                 <label className="text-xs font-extrabold text-slate-800 block mb-1">
-                  Kleidungs-Beschreibung (Freitext):
+                  {isEn ? 'Clothing Description (Custom text):' : 'Kleidungs-Beschreibung (Freitext):'}
                 </label>
                 <input
                   type="text"
@@ -521,14 +536,14 @@ export const PromptWizard = ({
                   onChange={(e) =>
                     setState((prev) => ({ ...prev, clothingDetails: e.target.value }))
                   }
-                  placeholder="z.B. Wetterfester Ölmantel, abgewetztes Leder, Seidenschal"
+                  placeholder={isEn ? 'e.g. Weatherproof trenchcoat, distressed leather, silk scarf' : 'z.B. Wetterfester Ölmantel, abgewetztes Leder, Seidenschal'}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
                 />
               </div>
 
               <div>
                 <label className="text-xs font-extrabold text-slate-800 block mb-1">
-                  Accessoires & Schmuck:
+                  {isEn ? 'Accessories & Jewelry:' : 'Accessoires & Schmuck:'}
                 </label>
                 <input
                   type="text"
@@ -536,7 +551,7 @@ export const PromptWizard = ({
                   onChange={(e) =>
                     setState((prev) => ({ ...prev, fashionAccessories: e.target.value }))
                   }
-                  placeholder="z.B. Runde Messing-Brille, Silberkette, Vintage-Uhr"
+                  placeholder={isEn ? 'e.g. Brass goggles, silver pocket chain, vintage watch' : 'z.B. Runde Messing-Brille, Silberkette, Vintage-Uhr'}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
                 />
               </div>
@@ -553,10 +568,10 @@ export const PromptWizard = ({
               </span>
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
-                  Möchtest du 1 Einzel-Clip oder eine Multi-Window Sequenz?
+                  {isEn ? 'Single Clip or Multi-Window Sequence?' : 'Möchtest du 1 Einzel-Clip oder eine Multi-Window Sequenz?'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Wähle zwischen einzelnem Clip oder strukturierter Multi-Window Abfolge.
+                  {isEn ? 'Choose between a standalone clip or a structured multi-window studio progression.' : 'Wähle zwischen einzelnem Clip oder strukturierter Multi-Window Abfolge.'}
                 </p>
               </div>
             </div>
@@ -567,7 +582,7 @@ export const PromptWizard = ({
                 onClick={() =>
                   setState((prev) => ({ ...prev, generatorMode: 'single' }))
                 }
-                className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                className={`p-5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                   state.generatorMode === 'single'
                     ? 'border-amber-500 bg-amber-50/50 shadow-md ring-2 ring-amber-500/20'
                     : 'border-slate-200 bg-slate-50 hover:border-slate-300'
@@ -582,10 +597,10 @@ export const PromptWizard = ({
                   )}
                 </div>
                 <h4 className="font-extrabold text-sm text-slate-900">
-                  Einzelner Clip (Keine Windows)
+                  {isEn ? 'Single Clip (No Windows)' : 'Einzelner Clip (Keine Windows)'}
                 </h4>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  Generiert 1 zusammenhängenden Prompt für ein flüssiges 3s–10s Video.
+                  {isEn ? 'Generates 1 cohesive prompt for a fluid 3s–10s video clip.' : 'Generiert 1 zusammenhängenden Prompt für ein flüssiges 3s–10s Video.'}
                 </p>
               </button>
 
@@ -595,7 +610,7 @@ export const PromptWizard = ({
                   setState((prev) => ({ ...prev, generatorMode: 'multi' }));
                   if (state.windows.length === 0) handleSetWindowCount(2);
                 }}
-                className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                className={`p-5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                   state.generatorMode === 'multi'
                     ? 'border-amber-500 bg-amber-50/50 shadow-md ring-2 ring-amber-500/20'
                     : 'border-slate-200 bg-slate-50 hover:border-slate-300'
@@ -610,10 +625,10 @@ export const PromptWizard = ({
                   )}
                 </div>
                 <h4 className="font-extrabold text-sm text-slate-900">
-                  Multi-Window Sequenz
+                  {isEn ? 'Multi-Window Sequence' : 'Multi-Window Sequenz'}
                 </h4>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  Verbindet mehrere zusammenhängende 3s-Windows zu einem Studio-Trailer.
+                  {isEn ? 'Connects multiple consecutive 3s windows into a full studio trailer.' : 'Verbindet mehrere zusammenhängende 3s-Windows zu einem Studio-Trailer.'}
                 </p>
               </button>
             </div>
@@ -622,20 +637,20 @@ export const PromptWizard = ({
             {state.generatorMode === 'multi' && (
               <div className="bg-slate-900 text-white rounded-xl p-4 space-y-3">
                 <label className="text-xs font-extrabold text-amber-400 block">
-                  Wie viele Windows möchtest du verbinden?
+                  {isEn ? 'How many Windows do you want to connect?' : 'Wie viele Windows möchtest du verbinden?'}
                 </label>
                 <div className="flex flex-wrap items-center gap-2">
                   {[2, 3, 4, 5, 6].map((num) => (
                     <button
                       key={num}
                       onClick={() => handleSetWindowCount(num)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                         state.windows.length === num
                           ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
                           : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
                       }`}
                     >
-                      {num} Windows ({num * 3} Sekunden)
+                      {num} Windows ({num * 3} {isEn ? 'Seconds' : 'Sekunden'})
                     </button>
                   ))}
                 </div>
@@ -652,11 +667,12 @@ export const PromptWizard = ({
                 4
               </span>
               <div>
-                <h3 className="text-base font-extrabold text-slate-900">
-                  Wie soll sich die Kamera bewegen?
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-amber-600" />
+                  {isEn ? 'How should the camera move?' : 'Wie soll sich die Kamera bewegen?'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Die Kameradynamik verleiht dem Video cineastischen Schwung.
+                  {isEn ? 'Camera dynamics provide high-end cinematic momentum.' : 'Die Kameradynamik verleiht dem Video cineastischen Schwung.'}
                 </p>
               </div>
             </div>
@@ -673,14 +689,14 @@ export const PromptWizard = ({
                         cameraMotion: isSelected ? '' : opt.value,
                       }))
                     }
-                    className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                    className={`p-3 rounded-xl border text-left text-xs transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                         : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
                     }`}
                   >
                     <div className="font-extrabold text-slate-900">
-                      {opt.labelDe}
+                      {isEn ? opt.label : opt.labelDe}
                     </div>
                     <div className="text-[10px] text-slate-500 mt-1 line-clamp-2">
                       {opt.description}
@@ -700,11 +716,12 @@ export const PromptWizard = ({
                 5
               </span>
               <div>
-                <h3 className="text-base font-extrabold text-slate-900">
-                  Welche Lichtstimmung passt zur Szene?
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Sun className="w-5 h-5 text-amber-600" />
+                  {isEn ? 'Which lighting mood fits the scene?' : 'Welche Lichtstimmung passt zur Szene?'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Wähle die Beleuchtung für maximale visuelle Dramatik.
+                  {isEn ? 'Select lighting for maximum visual drama and contrast.' : 'Wähle die Beleuchtung für maximale visuelle Dramatik.'}
                 </p>
               </div>
             </div>
@@ -721,14 +738,14 @@ export const PromptWizard = ({
                         lighting: isSelected ? '' : opt.value,
                       }))
                     }
-                    className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                    className={`p-3 rounded-xl border text-left text-xs transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                         : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
                     }`}
                   >
                     <div className="font-extrabold text-slate-900">
-                      {opt.labelDe}
+                      {isEn ? opt.label : opt.labelDe}
                     </div>
                     <div className="text-[10px] text-slate-500 mt-1 line-clamp-2">
                       {opt.description}
@@ -748,11 +765,12 @@ export const PromptWizard = ({
                 6
               </span>
               <div>
-                <h3 className="text-base font-extrabold text-slate-900">
-                  Welcher Linsen- & Render-Look soll genutzt werden?
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Aperture className="w-5 h-5 text-amber-600" />
+                  {isEn ? 'Which lens & render look should be used?' : 'Welcher Linsen- & Render-Look soll genutzt werden?'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Bestimmt Schärfentiefe, Anamorph-Flares und Textur.
+                  {isEn ? 'Defines depth of field, anamorphic flares, optical grain and texture.' : 'Bestimmt Schärfentiefe, Anamorph-Flares und Textur.'}
                 </p>
               </div>
             </div>
@@ -769,14 +787,14 @@ export const PromptWizard = ({
                         lensStyle: isSelected ? '' : opt.value,
                       }))
                     }
-                    className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                    className={`p-3 rounded-xl border text-left text-xs transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold shadow-xs'
                         : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
                     }`}
                   >
                     <div className="font-extrabold text-slate-900">
-                      {opt.labelDe}
+                      {isEn ? opt.label : opt.labelDe}
                     </div>
                     <div className="text-[10px] text-slate-500 mt-1 line-clamp-2">
                       {opt.label}
@@ -796,18 +814,19 @@ export const PromptWizard = ({
                 7
               </span>
               <div>
-                <h3 className="text-base font-extrabold text-slate-900">
-                  Sound-Cues & Videoformat einstellen
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Volume2 className="w-5 h-5 text-amber-600" />
+                  {isEn ? 'Sound Cues, Narrator & Format Settings' : 'Sound-Cues & Videoformat einstellen'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Füge Soundeffekte hinzu und wähle das Seitenverhältnis.
+                  {isEn ? 'Add synchronized sound effects, narrator voices, and aspect ratios.' : 'Füge Soundeffekte hinzu und wähle das Seitenverhältnis.'}
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
               <label className="text-xs font-extrabold text-slate-800 block">
-                Sound-Cue (Optional):
+                {isEn ? 'Sound Cue (Optional):' : 'Sound-Cue (Optional):'}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {AUDIO_CUE_OPTIONS.map((opt) => {
@@ -821,13 +840,51 @@ export const PromptWizard = ({
                           audioCue: isSelected ? '' : opt.value,
                         }))
                       }
-                      className={`p-2.5 rounded-xl border text-left text-xs transition-all ${
+                      className={`p-2.5 rounded-xl border text-left text-xs transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-amber-100 border-amber-500 text-slate-950 font-bold'
                           : 'bg-slate-50 border-slate-200 text-slate-700'
                       }`}
                     >
-                      <div className="font-bold">{opt.labelDe}</div>
+                      <div className="font-bold">{isEn ? opt.label : opt.labelDe}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Narrator Voice Selection */}
+            <div className="space-y-3 pt-3 border-t border-slate-100">
+              <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                <Mic className="w-3.5 h-3.5 text-amber-600" />
+                {isEn ? '🎙️ Cinema Narrator & Voice Character:' : '🎙️ Kino-Sprecher & Stimme (Narrator Voice):'}
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {NARRATOR_VOICE_OPTIONS.map((opt) => {
+                  const isSelected =
+                    state.narratorVoice === opt.value ||
+                    (Boolean(state.narratorVoice) &&
+                      state.narratorVoice.toLowerCase().includes(opt.label.toLowerCase().slice(0, 15)));
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() =>
+                        setState((prev) => ({
+                          ...prev,
+                          narratorVoice: isSelected ? '' : opt.value,
+                        }))
+                      }
+                      className={`p-2.5 rounded-xl border text-left text-xs transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-amber-500 border-amber-600 text-slate-950 font-extrabold shadow-xs'
+                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-amber-50/50'
+                      }`}
+                    >
+                      <div className="font-extrabold">{isEn ? opt.label : opt.labelDe}</div>
+                      <div className={`text-[10px] line-clamp-1 mt-0.5 ${isSelected ? 'text-slate-950/80 font-bold' : 'text-slate-500'}`}>
+                        {opt.label}
+                      </div>
                     </button>
                   );
                 })}
@@ -835,7 +892,7 @@ export const PromptWizard = ({
             </div>
 
             <div className="pt-3 border-t border-slate-100 flex items-center gap-4 text-xs font-bold">
-              <span>Seitenverhältnis:</span>
+              <span>{isEn ? 'Aspect Ratio:' : 'Seitenverhältnis:'}</span>
               <select
                 value={state.aspectRatio}
                 onChange={(e: any) =>
@@ -843,10 +900,10 @@ export const PromptWizard = ({
                 }
                 className="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900"
               >
-                <option value="16:9">16:9 (Kino / Youtube)</option>
-                <option value="9:16">9:16 (TikTok / Reels)</option>
-                <option value="1:1">1:1 (Quadrat)</option>
-                <option value="2.39:1">2.39:1 (Widescreen)</option>
+                <option value="16:9">{isEn ? '16:9 (Cinema / TV)' : '16:9 (Kino / TV)'}</option>
+                <option value="9:16">{isEn ? '9:16 (TikTok / Shorts)' : '9:16 (TikTok / Shorts)'}</option>
+                <option value="1:1">{isEn ? '1:1 (Square)' : '1:1 (Quadrat)'}</option>
+                <option value="2.39:1">{isEn ? '2.39:1 (Widescreen)' : '2.39:1 (Widescreen)'}</option>
               </select>
             </div>
           </div>
@@ -861,10 +918,12 @@ export const PromptWizard = ({
               </span>
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
-                  Dein Prompt ist fertig zusammengestellt!
+                  {isEn ? 'Your prompt is compiled and ready!' : 'Dein Prompt ist fertig zusammengestellt!'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Hier ist dein Ergebnis für MiniMax H3. Du kannst es direkt kopieren oder im Profimodus weiterbearbeiten.
+                  {isEn
+                    ? 'Here is your optimized result for MiniMax H3. You can copy it directly or refine in Pro Mode.'
+                    : 'Hier ist dein Ergebnis für MiniMax H3. Du kannst es direkt kopieren oder im Profimodus weiterbearbeiten.'}
                 </p>
               </div>
             </div>
@@ -873,14 +932,14 @@ export const PromptWizard = ({
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
               <span className="font-extrabold text-amber-900 flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-amber-600" />
-                Referenzbild verankern:
+                {isEn ? 'Anchor Reference Image in Prompt:' : 'Referenzbild verankern:'}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {referenceTags.map((rt) => (
                   <button
                     key={rt.tag}
                     onClick={() => handleInjectTag(rt.tag)}
-                    className="px-2.5 py-1 bg-white hover:bg-amber-100 text-slate-900 font-mono text-[11px] font-bold border border-amber-300 rounded-lg transition-all"
+                    className="px-2.5 py-1 bg-white hover:bg-amber-100 text-slate-900 font-mono text-[11px] font-bold border border-amber-300 rounded-lg transition-all cursor-pointer"
                   >
                     {rt.tag}
                   </button>
@@ -899,35 +958,35 @@ export const PromptWizard = ({
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={handleCopyResult}
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs shadow-md transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer"
               >
                 {copiedPrompt ? (
                   <>
-                    <Check className="w-4 h-4" /> Kopiert!
+                    <Check className="w-4 h-4" /> {isEn ? 'Copied!' : 'Kopiert!'}
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4" /> Prompt kopieren
+                    <Copy className="w-4 h-4" /> {isEn ? 'Copy Video Prompt' : 'Prompt kopieren'}
                   </>
                 )}
               </button>
 
               <button
                 onClick={onSwitchToProMode}
-                className="flex items-center gap-2 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs transition-all"
+                className="flex items-center gap-2 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs transition-all cursor-pointer"
               >
                 <SlidersHorizontal className="w-4 h-4 text-amber-400" />
-                Im Profimodus anpassen
+                {isEn ? 'Fine-tune in Pro Mode' : 'Im Profimodus anpassen'}
               </button>
 
               <button
                 onClick={() => {
                   onSavePreset();
-                  onShowToast('💾 In deinen Vorlagen gespeichert!');
+                  onShowToast(isEn ? '💾 Saved to your templates!' : '💾 In deinen Vorlagen gespeichert!');
                 }}
-                className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs border border-slate-300 transition-all flex items-center gap-1.5"
+                className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs border border-slate-300 transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <Bookmark className="w-4 h-4 text-slate-600" /> Als Vorlage speichern
+                <Bookmark className="w-4 h-4 text-slate-600" /> {isEn ? 'Save as Template' : 'Als Vorlage speichern'}
               </button>
             </div>
           </div>
@@ -938,32 +997,32 @@ export const PromptWizard = ({
           <button
             onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
             disabled={currentStep === 1}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
               currentStep === 1
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <ArrowLeft className="w-4 h-4" /> Zurück
+            <ArrowLeft className="w-4 h-4" /> {isEn ? 'Back' : 'Zurück'}
           </button>
 
           <span className="text-xs font-mono font-bold text-slate-400">
-            Schritt {currentStep} von {steps.length}
+            {isEn ? `Step ${currentStep} of ${steps.length}` : `Schritt ${currentStep} von ${steps.length}`}
           </span>
 
           {currentStep < steps.length ? (
             <button
               onClick={() => setCurrentStep((prev) => Math.min(steps.length, prev + 1))}
-              className="flex items-center gap-2 px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs transition-all shadow-xs"
+              className="flex items-center gap-2 px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs transition-all shadow-xs cursor-pointer"
             >
-              Weiter <ArrowRight className="w-4 h-4" />
+              {isEn ? 'Next' : 'Weiter'} <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               onClick={() => setCurrentStep(1)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold"
+              className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold cursor-pointer"
             >
-              <RotateCcw className="w-3.5 h-3.5" /> Neustart
+              <RotateCcw className="w-3.5 h-3.5" /> {isEn ? 'Restart' : 'Neustart'}
             </button>
           )}
         </div>
@@ -980,16 +1039,20 @@ export const PromptWizard = ({
                   <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-base">Vorlagen-Bibliothek wählen</h3>
+                  <h3 className="font-extrabold text-base">
+                    {isEn ? 'Choose Template Library' : 'Vorlagen-Bibliothek wählen'}
+                  </h3>
                   <p className="text-xs text-slate-300">
-                    Wähle aus {PRESET_TEMPLATES.length} vorgefertigten Horror-, Bau-, Immobilien- & Fashion-Stilen
+                    {isEn
+                      ? `Select from ${PRESET_TEMPLATES.length} curated Horror, Sci-Fi, Construction, Real Estate & Fashion styles`
+                      : `Wähle aus ${PRESET_TEMPLATES.length} vorgefertigten Horror-, Bau-, Immobilien- & Fashion-Stilen`}
                   </p>
                 </div>
               </div>
 
               <button
                 onClick={() => setShowPresetModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-sm"
+                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-sm cursor-pointer"
               >
                 ✕
               </button>
@@ -1005,7 +1068,7 @@ export const PromptWizard = ({
                     type="text"
                     value={presetSearch}
                     onChange={(e) => setPresetSearch(e.target.value)}
-                    placeholder="Suche in Vorlagen (z.B. Lovecraft, Nebel, Alien, Gesicht, Schweißen)..."
+                    placeholder={isEn ? 'Search templates (e.g. Lovecraft, Fog, Alien, Portrait, Welding)...' : 'Suche in Vorlagen (z.B. Lovecraft, Nebel, Alien, Gesicht, Schweißen)...'}
                     className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 font-medium"
                   />
                 </div>
@@ -1013,23 +1076,26 @@ export const PromptWizard = ({
                 {/* Categories */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
                   {[
-                    { id: 'all', label: 'Alle' },
+                    { id: 'all', label: isEn ? 'All' : 'Alle' },
                     { id: 'horror', label: '🧟 Horror' },
                     { id: 'sitcom', label: '📺 Sitcom' },
                     { id: 'scify', label: '🚀 Sci-Fi' },
-                    { id: 'bau', label: '🏗️ Bau' },
-                    { id: 'immobilien', label: '🏛️ Immobilien' },
-                    { id: 'restaurant', label: '🍳 Gastro' },
+                    { id: 'bau', label: isEn ? '🏗️ Construction' : '🏗️ Bau' },
+                    { id: 'immobilien', label: isEn ? '🏛️ Real Estate' : '🏛️ Immobilien' },
+                    { id: 'restaurant', label: isEn ? '🍳 Food & Dining' : '🍳 Gastro' },
                     { id: 'cyberpunk', label: '🌆 Cyberpunk' },
                     { id: 'fashion', label: '💃 Fashion' },
                     { id: 'action', label: '⚡ Action' },
                     { id: 'fantasy', label: '🧙 Fantasy' },
-                    { id: 'nature', label: '🌿 Natur' },
+                    { id: 'nature', label: isEn ? '🌿 Nature' : '🌿 Natur' },
+                    { id: 'comic', label: '📖 Comic' },
+                    { id: 'war', label: isEn ? '🎖️ War Cinema' : '🎖️ Kriegsfilm' },
+                    { id: 'politics', label: isEn ? '🏛️ Politics' : '🏛️ Politik' },
                   ].map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                         selectedCategory === cat.id
                           ? 'bg-amber-500 text-slate-950 font-black'
                           : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -1080,10 +1146,10 @@ export const PromptWizard = ({
 
                     <button
                       onClick={() => handleApplyPreset(preset)}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs transition-all shadow-xs"
+                      className="w-full flex items-center justify-center gap-1.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs transition-all shadow-xs cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      Diese Vorlage laden
+                      {isEn ? 'Load this Template' : 'Diese Vorlage laden'}
                     </button>
                   </div>
                 ))}

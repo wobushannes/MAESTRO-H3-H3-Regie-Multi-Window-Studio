@@ -102,17 +102,20 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
   
   // Categories lookup
   const CATEGORIES = [
-    { value: 'horror', label: 'Horror' },
-    { value: 'sitcom', label: 'Sitcom' },
-    { value: 'scify', label: 'Sci-Fi Space' },
-    { value: 'bau', label: 'Bau & Handwerk' },
-    { value: 'immobilien', label: 'Immobilien' },
-    { value: 'restaurant', label: 'Gourmet Food' },
-    { value: 'cyberpunk', label: 'Cyberpunk' },
-    { value: 'fashion', label: 'Fashion / Style' },
-    { value: 'action', label: 'Action & Speed' },
-    { value: 'fantasy', label: 'Dark Fantasy' },
-    { value: 'nature', label: 'Nature Landscapes' },
+    { value: 'war', label: '🎖️ Kriegsfilm & Front', count: PRESET_TEMPLATES.filter(t => t.category === 'war').length },
+    { value: 'politics', label: '🏛️ Wahlkampf & Politik', count: PRESET_TEMPLATES.filter(t => t.category === 'politics').length },
+    { value: 'comic', label: '📖 Comic & Novel', count: PRESET_TEMPLATES.filter(t => t.category === 'comic').length },
+    { value: 'horror', label: '🔥 Horror & Grusel', count: PRESET_TEMPLATES.filter(t => t.category === 'horror').length },
+    { value: 'scify', label: '🚀 Sci-Fi & Weltall', count: PRESET_TEMPLATES.filter(t => t.category === 'scify').length },
+    { value: 'action', label: '⚡ Action & Chase', count: PRESET_TEMPLATES.filter(t => t.category === 'action').length },
+    { value: 'fantasy', label: '🧙 Dark Fantasy', count: PRESET_TEMPLATES.filter(t => t.category === 'fantasy').length },
+    { value: 'cyberpunk', label: '✨ Cyberpunk', count: PRESET_TEMPLATES.filter(t => t.category === 'cyberpunk').length },
+    { value: 'sitcom', label: '📺 Sitcom & Comedy', count: PRESET_TEMPLATES.filter(t => t.category === 'sitcom').length },
+    { value: 'nature', label: '🌿 Natur & Landschaft', count: PRESET_TEMPLATES.filter(t => t.category === 'nature').length },
+    { value: 'bau', label: '🏗️ Bau & Handwerk', count: PRESET_TEMPLATES.filter(t => t.category === 'bau').length },
+    { value: 'immobilien', label: '🏠 Immobilien', count: PRESET_TEMPLATES.filter(t => t.category === 'immobilien').length },
+    { value: 'restaurant', label: '🍽️ Food & Dining', count: PRESET_TEMPLATES.filter(t => t.category === 'restaurant').length },
+    { value: 'fashion', label: '👗 Fashion & Style', count: PRESET_TEMPLATES.filter(t => t.category === 'fashion').length },
   ];
 
   const categoryTemplates = PRESET_TEMPLATES.filter((t) => t.category === activeCategory);
@@ -270,32 +273,33 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
 
             {/* 🎞️ INTERACTIVE CATEGORY TEMPLATE CYCLER CONSOLE */}
             {onLoadTemplate && (
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
+                <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                   <div className="flex items-center gap-1.5 text-amber-400 font-bold bg-amber-950/40 px-2 py-1 rounded border border-amber-900/40">
                     <FolderOpen className="w-3.5 h-3.5" />
                     <span>{translations.category}</span>
                   </div>
                   <select
+                    id="output-category-select"
                     value={activeCategory}
                     onChange={(e) => handleCategoryChange(e.target.value)}
                     className="bg-slate-950 border border-slate-700 rounded px-2.5 py-1 text-slate-100 font-bold focus:outline-none focus:border-amber-500 text-xs cursor-pointer"
                   >
                     {CATEGORIES.map((cat) => (
                       <option key={cat.value} value={cat.value}>
-                        {cat.label}
+                        {cat.label} ({cat.count})
                       </option>
                     ))}
                   </select>
 
                   <span className="px-2 py-1 bg-slate-800 text-slate-300 rounded font-mono font-black text-[11px] shrink-0">
-                    {currentIndex >= 0 ? `${currentIndex + 1} / ${categoryTemplates.length}` : `Special / ${categoryTemplates.length}`}
+                    {currentIndex >= 0 ? `${currentIndex + 1} / ${categoryTemplates.length}` : `Spezial / ${categoryTemplates.length}`}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5 w-full md:w-auto justify-between md:justify-end">
+                <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end">
                   {currentTemplate && (
-                    <div className="text-[11px] text-amber-100 font-semibold truncate max-w-[200px] sm:max-w-xs md:max-w-[240px] px-2" title={currentTemplate.title}>
+                    <div className="text-[11px] text-amber-100 font-semibold truncate max-w-[200px] sm:max-w-xs md:max-w-[280px] px-2" title={currentTemplate.title}>
                       🎬 {currentTemplate.title}
                     </div>
                   )}
@@ -304,19 +308,19 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                     <button
                       type="button"
                       onClick={handlePrevTemplate}
-                      className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-lg text-slate-200 transition-colors flex items-center gap-1 border border-slate-700"
+                      className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-lg text-slate-200 transition-colors flex items-center gap-1 border border-slate-700 font-bold text-xs"
                       title={state.language === 'en' ? 'Load previous template' : 'Vorherige Vorlage dieser Kategorie laden'}
                     >
                       <ChevronLeft className="w-4 h-4" />
-                      <span className="hidden sm:inline">{translations.prev}</span>
+                      <span className="hidden md:inline">{translations.prev}</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleNextTemplate}
-                      className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-lg text-slate-200 transition-colors flex items-center gap-1 border border-slate-700"
+                      className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-lg text-slate-200 transition-colors flex items-center gap-1 border border-slate-700 font-bold text-xs"
                       title={state.language === 'en' ? 'Load next template' : 'Nächste Vorlage dieser Kategorie laden'}
                     >
-                      <span className="hidden sm:inline">{translations.next}</span>
+                      <span className="hidden md:inline">{translations.next}</span>
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
