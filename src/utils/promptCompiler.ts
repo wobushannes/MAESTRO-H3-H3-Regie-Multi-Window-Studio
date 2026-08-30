@@ -374,21 +374,21 @@ function getCategoryDefaultReferencesRaw(category?: string, personCount?: Person
   // Fallback for any other category
   if (pCount === '1_person') {
     return [
-      { id: `ref-${cat}-solo-1`, tag: 'picture 1', label: `Protagonist (picture 1)`, role: 'subject', url: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80', description: `Single solo main character reference for ${cat}` },
+      { id: `ref-${cat}-solo-1`, tag: 'picture 1', label: `Protagonist (picture 1)`, role: 'subject', url: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80', description: `Single solo main character reference for the ${cat.toUpperCase()} sequence` },
       { id: `ref-${cat}-solo-2`, tag: 'picture 2', label: `Kostüm & Naheinstellung (picture 2)`, role: 'style', url: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80', description: `Close-up on outfit details, materials or facial expressions` },
       { id: `ref-${cat}-solo-3`, tag: 'picture 3', label: `Kulisse & Hintergrund (picture 3)`, role: 'location', url: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=600&q=80', description: `Atmospheric background environment and camera angle reference` },
       { id: `ref-${cat}-solo-4`, tag: 'picture 4', label: `Licht & Farb-Key (picture 4)`, role: 'style', url: 'https://images.unsplash.com/photo-1514373941175-0a141072bbc8?auto=format&fit=crop&w=600&q=80', description: `Visual styling, contrast, color grading, and shadow tone reference` },
     ];
   } else if (pCount === '2_person') {
     return [
-      { id: `ref-${cat}-duo-1`, tag: 'picture 1', label: `Hauptfigur / Lead (picture 1)`, role: 'subject', url: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80', description: `Lead protagonist actor for ${cat}` },
+      { id: `ref-${cat}-duo-1`, tag: 'picture 1', label: `Hauptfigur / Lead (picture 1)`, role: 'subject', url: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80', description: `Lead protagonist actor for the ${cat.toUpperCase()} sequence` },
       { id: `ref-${cat}-duo-2`, tag: 'picture 2', label: `Partner / Co-Star (picture 2)`, role: 'character', url: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80', description: `Co-star/partner reacting or interacting directly` },
       { id: `ref-${cat}-duo-3`, tag: 'picture 3', label: `Interaktions-Fokus (picture 3)`, role: 'style', url: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80', description: `Medium close-up shot focused on character interplay and dynamics` },
       { id: `ref-${cat}-duo-4`, tag: 'picture 4', label: `Stil & Kulisse (picture 4)`, role: 'style', url: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=600&q=80', description: `Cinematic backdrop environment and mood lighting` },
     ];
   } else {
     return [
-      { id: `ref-${cat}-1`, tag: 'picture 1', label: `Hauptrolle / Lead Actor (picture 1)`, role: 'subject', url: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80', description: `Main protagonist / Lead actor anchor for ${cat}` },
+      { id: `ref-${cat}-1`, tag: 'picture 1', label: `Hauptrolle / Lead Actor (picture 1)`, role: 'subject', url: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80', description: `Main protagonist / Lead actor anchor for the ${cat.toUpperCase()} sequence` },
       { id: `ref-${cat}-2`, tag: 'picture 2', label: `Zweitperson / Co-Star (picture 2)`, role: 'character', url: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80', description: `Secondary supporting character or interacting partner` },
       { id: `ref-${cat}-3`, tag: 'picture 3', label: `Gruppe / Ensemble (picture 3)`, role: 'character', url: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80', description: `Supporting group or background ensemble characters` },
       { id: `ref-${cat}-4`, tag: 'picture 4', label: `Stil & Umgebung (picture 4)`, role: 'style', url: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=600&q=80', description: `Key visual aesthetic reference and backdrop styling` },

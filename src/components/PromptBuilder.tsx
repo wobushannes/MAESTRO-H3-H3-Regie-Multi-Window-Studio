@@ -176,6 +176,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
       ...prev,
       personCount: qp.personCount || '1_person',
       category: qp.category || 'action',
+      referenceImages: getCategoryDefaultReferences(qp.category || 'action', qp.personCount || '1_person'),
       rawConcept: qp.rawConcept || prev.rawConcept,
       wardrobeStyle: qp.wardrobeStyle || prev.wardrobeStyle,
       clothingDetails: qp.clothingDetails || prev.clothingDetails,
@@ -698,6 +699,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                         setState(prev => ({
                           ...prev,
                           category: cat.id as any,
+                          referenceImages: getCategoryDefaultReferences(cat.id, prev.personCount),
                           commercialPresetId: firstPreset ? firstPreset.id : prev.commercialPresetId,
                           commercialBrandName: firstPreset?.defaultBrand || defaults.brandName,
                           commercialClaim: firstPreset?.defaultClaim || defaults.claim,
@@ -740,6 +742,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     setState(prev => ({
                       ...prev,
                       category: 'immobilien',
+                      referenceImages: getCategoryDefaultReferences('immobilien', prev.personCount),
                       commercialPresetId: p.id,
                       commercialBrandName: 'GENESIS LUXURY HOMES',
                       commercialClaim: 'Vom ersten Spatenstich zu Ihrem Wohntraum.',
@@ -764,6 +767,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     setState(prev => ({
                       ...prev,
                       category: 'immobilien',
+                      referenceImages: getCategoryDefaultReferences('immobilien', prev.personCount),
                       commercialPresetId: p.id,
                       commercialBrandName: 'ARCHITECTURAL LIVING',
                       commercialClaim: 'Ihr Raum. Ihre Vision. Ihre Realität.',
@@ -788,6 +792,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     setState(prev => ({
                       ...prev,
                       category: 'food',
+                      referenceImages: getCategoryDefaultReferences('food', prev.personCount),
                       commercialPresetId: p.id,
                       commercialBrandName: 'STERNEKOCH SELECTION',
                       commercialClaim: 'Handwerkskunst auf dem Teller.',
@@ -824,6 +829,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   setState(prev => ({
                     ...prev,
                     category: preset.category as any,
+                    referenceImages: getCategoryDefaultReferences(preset.category, prev.personCount),
                     commercialPresetId: preset.id,
                     commercialBrandName: preset.defaultBrand,
                     commercialClaim: preset.defaultClaim,
@@ -1371,6 +1377,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   setState((prev) => ({
                     ...prev,
                     category: newCat,
+                    referenceImages: getCategoryDefaultReferences(newCat, prev.personCount),
                     commercialPresetId: matchedCommPreset?.id || `comm-auto-${newCat}`,
                     commercialBrandName: matchedCommPreset?.defaultBrand || commDefaults.brandName,
                     commercialClaim: matchedCommPreset?.defaultClaim || commDefaults.claim,
@@ -1461,6 +1468,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     setState(prev => ({
                       ...prev,
                       category: preset.category as any,
+                      referenceImages: getCategoryDefaultReferences(preset.category, prev.personCount),
                       commercialPresetId: preset.id,
                       commercialBrandName: preset.defaultBrand,
                       commercialClaim: preset.defaultClaim,
