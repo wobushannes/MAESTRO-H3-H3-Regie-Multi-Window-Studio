@@ -177,7 +177,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
   onShowToast,
 }) => {
   // Panel Modes: normal, minimized, maximized
-  const [panelMode, setPanelMode] = useState<'normal' | 'minimized' | 'maximized'>('normal');
+  const [panelMode, setPanelMode] = useState<'normal' | 'minimized' | 'maximized'>('minimized');
 
 
 
@@ -797,6 +797,17 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({
                 </span>
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={() => setPanelMode(panelMode === 'minimized' ? 'normal' : 'minimized')}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-slate-900/90 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer ml-1"
+            >
+              {panelMode === 'minimized' ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">
+                {panelMode === 'minimized' ? translations.maximize : translations.minimize}
+              </span>
+            </button>
           </div>
         </div>
 
