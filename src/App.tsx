@@ -8,12 +8,18 @@ import { ReferenceManager } from './components/ReferenceManager';
 import { MaestroTimeline } from './components/MaestroTimeline';
 import { GuidelinesModal } from './components/GuidelinesModal';
 import { SavedPromptsModal } from './components/SavedPromptsModal';
+import { AnalogEngineView } from './components/AnalogEngineView';
+import { CommercialsView } from './components/CommercialsView';
 import { OutputPanel } from './components/OutputPanel';
 import { PRESET_TEMPLATES } from './data/presets';
 import {
   extractEpicMovieTitle,
   getDialogueFallbackForCategory,
   getNarratorVoiceFallbackForCategory,
+  getCategoryDefaultSoundscape,
+  generateExtrapolatedWindowsForTemplate,
+  formatPrecisionTimeRange,
+  getCategoryDefaultReferences,
 } from './utils/promptCompiler';
 import {
   PromptBuildState,
@@ -22,6 +28,14 @@ import {
   ReferenceImage,
   MaestroWindow,
 } from './types';
+import { getCategoryPovDefaults, enforceCategoryPovKinetics } from './utils/povCategoryDefaults';
+import { getCategoryCommercialDefaults, getCommercialPresetForCategoryOrTitle } from './utils/commercialMasterEngine';
+import {
+  loadCustomTemplatesFromStorage,
+  saveCustomTemplatesToStorage,
+  loadSavedPromptsFromStorage,
+  saveSavedPromptsToStorage,
+} from './utils/templateStorage';
 
 export default function App() {
   const [state, setState] = useState<PromptBuildState>({
@@ -45,10 +59,17 @@ export default function App() {
     styleCode: 'ASTROCINEMAV01K2T',
     narratorVoice: 'Deep cinematic male narrator with gravitas',
     dialogueLines: '',
+    voiceoverEnabled: false,
     wardrobeStyle: '',
     clothingDetails: '',
     fashionAccessories: '',
     outputFormatStyle: 'direct_prompt',
+    isImmersivePov: false,
+    povFootsteps: 'walking_bob',
+    povBreathVapor: 'cold_vapor',
+    povInteractiveHands: 'holding_equipment',
+    povWeatherImmersion: 'frost_lens_droplets',
+    povVisceralAudio: false,
     referenceImages: [
       {
         id: 'ref-demo-1',
@@ -63,7 +84,7 @@ export default function App() {
       {
         id: 'win-1',
         windowNumber: 1,
-        timeRange: '0s - 3s',
+        timeRange: '00:00.000–00:14.000',
         prompt: 'Ein düsterer Raum, Kamera fährt langsam vorwärts.',
         cameraTrajectory: 'Slow Forward Dolly Push-In',
         continuityNote: 'Anfangs-Sequenz (Initial Shot)',
@@ -73,7 +94,7 @@ export default function App() {
       {
         id: 'win-2',
         windowNumber: 2,
-        timeRange: '3s - 6s',
+        timeRange: '00:14.000–00:28.000',
         prompt: 'Die Kamera führt den Schwung nahtlos fort und schwenkt leicht nach rechts auf die Schattengestalt.',
         cameraTrajectory: 'Forward Glide -> Slow Pan Right',
         continuityNote: 'Nahtlose Kamera-Kontinuität aus Window 1',
@@ -89,42 +110,24 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Custom Templates saved in localStorage
+  // Custom Templates saved in localStorage via JSON storage utility
   const [customTemplates, setCustomTemplates] = useState<PresetTemplate[]>(() => {
-    try {
-      const stored = localStorage.getItem('maestro_h3_custom_templates');
-      return stored ? JSON.parse(stored) : [];
-    } catch (err) {
-      return [];
-    }
+    return loadCustomTemplatesFromStorage();
   });
 
   // Sync custom templates to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem('maestro_h3_custom_templates', JSON.stringify(customTemplates));
-    } catch (err) {
-      console.error('Failed to save custom templates to localStorage', err);
-    }
+    saveCustomTemplatesToStorage(customTemplates);
   }, [customTemplates]);
 
   // Saved Prompts list from localStorage
   const [savedList, setSavedList] = useState<SavedPreset[]>(() => {
-    try {
-      const stored = localStorage.getItem('maestro_h3_saved_prompts');
-      return stored ? JSON.parse(stored) : [];
-    } catch (err) {
-      return [];
-    }
+    return loadSavedPromptsFromStorage();
   });
 
   // Save list sync to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem('maestro_h3_saved_prompts', JSON.stringify(savedList));
-    } catch (err) {
-      console.error('Failed to write to localStorage', err);
-    }
+    saveSavedPromptsToStorage(savedList);
   }, [savedList]);
 
   const showToast = (msg: string) => {
@@ -146,27 +149,71 @@ export default function App() {
 
   // Template select handler
   const handleSelectTemplate = (tpl: PresetTemplate) => {
-    setState((prev) => ({
-      ...prev,
-      selectedPresetId: tpl.id,
-      rawConcept: tpl.prompt,
-      cameraMotion: tpl.camera,
-      lighting: tpl.lighting,
-      lensStyle: tpl.lens,
-      motionSpeed: tpl.motionSpeed,
-      audioCue: tpl.audioCue || '',
-      nsfwMode: tpl.isNsfw || prev.nsfwMode,
-      activeTab: 'click-builder',
-      appMode: 'pro',
-      movieTitle: tpl.movieTitle || extractEpicMovieTitle(tpl.title),
-      dialogueLines: tpl.dialogueLines || getDialogueFallbackForCategory(tpl.category, tpl.title),
-      narratorVoice: tpl.narratorVoice || getNarratorVoiceFallbackForCategory(tpl.category, tpl.title),
-      styleCode: tpl.styleCode || 'ASTROCINEMAV01K2T',
-      wardrobeStyle: tpl.wardrobeStyle || prev.wardrobeStyle,
-      clothingDetails: tpl.clothingDetails || prev.clothingDetails,
-      characterPersonaDescription: tpl.characterPersonaDescription || '',
-    }));
-    showToast(`🎬 "${tpl.title}" geladen + Kino-Titel & Dialoge aufgebohrt!`);
+    const matchedCommPreset = getCommercialPresetForCategoryOrTitle(tpl.category, tpl.title);
+    const commDefaults = getCategoryCommercialDefaults(tpl.category);
+
+    const commBrand = tpl.commercialBrandName || matchedCommPreset?.defaultBrand || commDefaults.brandName;
+    const commClaim = tpl.commercialClaim || matchedCommPreset?.defaultClaim || commDefaults.claim;
+    const commCta = tpl.commercialCallToAction || matchedCommPreset?.defaultCta || commDefaults.callToAction;
+    const commSpatial = tpl.spatialTextContent || matchedCommPreset?.defaultSpatialText || commDefaults.spatialText;
+
+    setState((prev) => {
+      // POV is always OFF by default unless user explicitly turned it ON
+      const isPov = prev.isImmersivePov || false;
+      const catDefaults = getCategoryPovDefaults(tpl.category, tpl.title);
+
+      let newState: PromptBuildState = {
+        ...prev,
+        selectedPresetId: tpl.id,
+        rawConcept: tpl.prompt,
+        cameraMotion: tpl.camera,
+        lighting: tpl.lighting,
+        lensStyle: tpl.lens,
+        motionSpeed: tpl.motionSpeed,
+        audioCue: tpl.audioCue || getCategoryDefaultSoundscape(tpl.category),
+        nsfwMode: tpl.isNsfw || prev.nsfwMode,
+        activeTab: 'click-builder',
+        generatorMode: 'single',
+        windows: [],
+        appMode: 'pro',
+        movieTitle: tpl.movieTitle || extractEpicMovieTitle(tpl.title),
+        dialogueLines: tpl.dialogueLines || getDialogueFallbackForCategory(tpl.category, tpl.title),
+        narratorVoice: tpl.narratorVoice || getNarratorVoiceFallbackForCategory(tpl.category, tpl.title),
+        voiceoverEnabled: true,
+        styleCode: tpl.styleCode || 'ASTROCINEMAV01K2T',
+        wardrobeStyle: tpl.wardrobeStyle || prev.wardrobeStyle,
+        clothingDetails: tpl.clothingDetails || prev.clothingDetails,
+        characterPersonaDescription: tpl.characterPersonaDescription || '',
+        isImmersivePov: isPov,
+        category: tpl.category,
+        personCount: tpl.personCount || '1_person',
+        referenceImages: getCategoryDefaultReferences(tpl.category, tpl.personCount || '1_person'),
+        povKineticProfile: tpl.povKineticProfile || catDefaults.kineticProfile,
+        povVerticalDisplacement: tpl.povVerticalDisplacement || catDefaults.verticalDisplacement,
+        povRigType: (tpl.povRigType as any) || catDefaults.povRigType,
+        povFootsteps: (tpl.povFootsteps as any) || catDefaults.povFootsteps,
+        povBreathVapor: (tpl.povBreathVapor as any) || catDefaults.povBreathVapor,
+        povInteractiveHands: (tpl.povInteractiveHands as any) || catDefaults.povInteractiveHands,
+        povWeatherImmersion: (tpl.povWeatherImmersion as any) || catDefaults.povWeatherImmersion,
+        povVisceralAudio: tpl.povVisceralAudio !== undefined ? tpl.povVisceralAudio : catDefaults.povVisceralAudio,
+        // Auto-load commercial brand & claim / slogans when loading ANY template or preset
+        commercialPresetId: tpl.commercialPresetId || matchedCommPreset?.id || `comm-auto-${tpl.category}`,
+        commercialBrandName: commBrand,
+        commercialClaim: commClaim,
+        commercialCallToAction: commCta,
+        spatialTextOverlayEnabled: true,
+        spatialTextContent: commSpatial,
+        analogPresetId: tpl.analogPresetId || matchedCommPreset?.analogPresetId || prev.analogPresetId,
+      };
+
+      if (isPov) {
+        newState = enforceCategoryPovKinetics(newState, tpl.category, true);
+      }
+
+      return newState;
+    });
+
+    showToast(`🎬 "${tpl.title}" geladen + Marke "${commBrand}" & Slogan aktiviert!`);
   };
 
   // Reference management
@@ -231,12 +278,10 @@ export default function App() {
   const handleAddWindow = () => {
     setState((prev) => {
       const nextNum = prev.windows.length + 1;
-      const startSec = (nextNum - 1) * 3;
-      const endSec = nextNum * 3;
       const newWin: MaestroWindow = {
         id: `win-${Date.now()}`,
         windowNumber: nextNum,
-        timeRange: `${startSec}s - ${endSec}s`,
+        timeRange: formatPrecisionTimeRange(nextNum, 14),
         prompt: `Szenen-Aktion für Window ${nextNum}`,
         cameraTrajectory: 'Nahtlose Weiterführung der Kamera-Bewegung',
         continuityNote: `Fortführung der Kinetik aus Window ${nextNum - 1}`,
@@ -334,7 +379,7 @@ export default function App() {
         />
 
         {/* Main Container */}
-        <main className="max-w-7xl mx-auto px-4 py-6 w-full">
+        <main className="max-w-7xl mx-auto px-4 py-6 pb-64 w-full">
           {state.appMode === 'wizard' ? (
             /* DIALOGMODUS / WIZARD */
             <PromptWizard
@@ -362,11 +407,28 @@ export default function App() {
                   customTemplates={customTemplates}
                   onCreateCustomTemplate={handleCreateCustomTemplate}
                   onDeleteCustomTemplate={handleDeleteCustomTemplate}
+                  onUpdateCustomTemplates={setCustomTemplates}
                   onSelectTemplate={handleSelectTemplate}
                   onCopyText={handleCopyText}
                   nsfwMode={state.nsfwMode}
                   builtInTemplates={PRESET_TEMPLATES}
                   language={state.language}
+                />
+              )}
+
+              {state.activeTab === 'analog-engine' && (
+                <AnalogEngineView
+                  state={state}
+                  onUpdateState={setState}
+                  onShowToast={showToast}
+                />
+              )}
+
+              {state.activeTab === 'commercial-ads' && (
+                <CommercialsView
+                  state={state}
+                  onUpdateState={setState}
+                  onShowToast={showToast}
                 />
               )}
 
@@ -377,19 +439,6 @@ export default function App() {
                   onRemoveReference={handleRemoveReference}
                   onInjectTagToPrompt={handleInjectTagToPrompt}
                   onSetReferencesCount={handleSetReferencesCount}
-                  language={state.language}
-                />
-              )}
-
-              {state.activeTab === 'maestro-windows' && (
-                <MaestroTimeline
-                  windows={state.windows}
-                  onAddWindow={handleAddWindow}
-                  onUpdateWindow={handleUpdateWindow}
-                  onRemoveWindow={handleRemoveWindow}
-                  onCopyScript={(script) => handleCopyText(script, 'Maestro Script')}
-                  availableReferences={state.referenceImages}
-                  rawConcept={state.rawConcept}
                   language={state.language}
                 />
               )}
@@ -412,6 +461,14 @@ export default function App() {
                     setSavedList((prev) => [...imported, ...prev]);
                     showToast(state.language === 'en' ? `${imported.length} presets imported!` : `${imported.length} Vorlagen importiert!`);
                   }}
+                  onUpdateSavedItem={(updated) => {
+                    setSavedList((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+                    showToast(state.language === 'en' ? 'Commercial details updated!' : 'Vorlagen-Details aktualisiert!');
+                  }}
+                  onPublishToCustomTemplate={(newTpl) => {
+                    handleCreateCustomTemplate(newTpl);
+                    showToast(state.language === 'en' ? 'Published to Template Library!' : 'In Vorlagen-Bibliothek veröffentlicht!');
+                  }}
                   onCopyText={handleCopyText}
                   language={state.language}
                 />
@@ -428,6 +485,8 @@ export default function App() {
         onCopyMaestro={(text) => handleCopyText(text, 'Maestro Script')}
         onSavePreset={handleSavePreset}
         onLoadTemplate={handleSelectTemplate}
+        onUpdateState={setState}
+        onShowToast={showToast}
       />
     </div>
   );

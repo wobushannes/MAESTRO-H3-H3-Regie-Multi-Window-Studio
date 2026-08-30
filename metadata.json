@@ -1,6 +1,6 @@
 {
   "name": "Maestro MiniMax H3 Prompt Studio",
-  "description": "Zentrale Click-Oberfläche & Multi-Window Sequenz-Generator für MiniMax H3 / Hailuo Videoprompting mit Vorlagen für Horror, Immobilien, Bau & Gastronomie.",
+  "description": "Zentrale Click-Oberfläche & Prompt-Compiler für MiniMax H3 / Hailuo Videoprompting mit 1,100+ Vorlagen, Analog-Engine & 150+ Commercial Ad-Presets inkl. 50 2-Pic Chef & Foodporn-Vorlagen, Brand Claim & Outro-Studio.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

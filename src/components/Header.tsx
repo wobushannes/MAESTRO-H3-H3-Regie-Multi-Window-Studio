@@ -11,6 +11,7 @@ import {
   Layers,
   SlidersHorizontal,
   Bot,
+  Camera,
 } from 'lucide-react';
 import { PromptBuildState } from '../types';
 
@@ -109,7 +110,19 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <Film className="w-3.5 h-3.5" />
-              Vorlagen ({PRESET_COUNT_BADGE})
+              Vorlagen
+            </button>
+
+            <button
+              onClick={() => onChangeTab('analog-engine')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                state.activeTab === 'analog-engine'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+              }`}
+            >
+              <Camera className="w-3.5 h-3.5" />
+              Analog Engine
             </button>
 
             <button
@@ -127,18 +140,6 @@ export const Header: React.FC<HeaderProps> = ({
                   {state.referenceImages.length}
                 </span>
               )}
-            </button>
-
-            <button
-              onClick={() => onChangeTab('maestro-windows')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-                state.activeTab === 'maestro-windows'
-                  ? 'bg-amber-500 text-slate-950 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              Maestro Windows ({state.windows.length})
             </button>
 
             <button

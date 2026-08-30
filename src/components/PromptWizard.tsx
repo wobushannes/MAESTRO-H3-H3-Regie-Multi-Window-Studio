@@ -37,6 +37,9 @@ import {
   compileCleanVisualVideoPrompt,
   compileStudioTheatricalScript,
   getNarratorVoiceFallbackForCategory,
+  getCategoryDefaultSoundscape,
+  getDialogueFallbackForCategory,
+  formatPrecisionTimeRange,
 } from '../utils/promptCompiler';
 
 interface PromptWizardProps {
@@ -121,35 +124,19 @@ export const PromptWizard: React.FC<PromptWizardProps> = ({
         lighting: preset.lighting,
         lensStyle: preset.lens,
         motionSpeed: preset.motionSpeed || '24fps Normal',
-        audioCue: preset.audioCue || '',
+        audioCue: preset.audioCue || getCategoryDefaultSoundscape(preset.category),
         negativePrompt: preset.negativePrompt,
         styleCode: preset.styleCode || 'ASTROCINEMAV01K2T',
         wardrobeStyle: preset.wardrobeStyle || '',
         clothingDetails: preset.clothingDetails || '',
         movieTitle: preset.movieTitle || preset.title.toUpperCase(),
-        dialogueLines: preset.dialogueLines || '',
+        dialogueLines: preset.dialogueLines || getDialogueFallbackForCategory(preset.category, preset.title),
         narratorVoice: preset.narratorVoice || getNarratorVoiceFallbackForCategory(preset.category, preset.title),
+        voiceoverEnabled: true,
         characterPersonaDescription: preset.characterPersonaDescription || '',
+        category: preset.category,
+        generatorMode: 'single',
       };
-
-      if (preset.windowsCount && preset.windowsCount > 1) {
-        newState.generatorMode = 'multi';
-        newState.windows = Array.from({ length: preset.windowsCount }, (_, i) => i + 1).map((idx) => ({
-          id: `win-wiz-${Date.now()}-${idx}`,
-          windowNumber: idx,
-          timeRange: `${(idx - 1) * 3}s - ${idx * 3}s`,
-          prompt:
-            idx === 1
-              ? preset.prompt
-              : isEn ? `Continuation of action in Window ${idx}` : `Fortführung der Handlung in Window ${idx}`,
-          cameraTrajectory: preset.camera || (isEn ? 'Dynamic camera continuation' : 'Dynamische Kameraweiterführung'),
-          continuityNote: isEn ? `Seamless continuity from Window ${idx - 1}` : `Nahtlose Kontinuität aus Window ${idx - 1}`,
-          motionSpeed: preset.motionSpeed || '24fps Normal',
-          referenceImages: [],
-        }));
-      } else {
-        newState.generatorMode = 'single';
-      }
 
       return newState;
     });
@@ -158,41 +145,14 @@ export const PromptWizard: React.FC<PromptWizardProps> = ({
     onShowToast(isEn ? `✨ Template "${preset.title}" loaded!` : `✨ Vorlage "${preset.title}" geladen!`);
   };
 
-  // Set Multi-Window Quantity helper
-  const handleSetWindowCount = (targetCount: number) => {
-    setState((prev) => {
-      const current = [...prev.windows];
-      if (targetCount > current.length) {
-        for (let i = current.length + 1; i <= targetCount; i++) {
-          const startSec = (i - 1) * 3;
-          const endSec = i * 3;
-          current.push({
-            id: `win-wiz-${Date.now()}-${i}`,
-            windowNumber: i,
-            timeRange: `${startSec}s - ${endSec}s`,
-            prompt: i === 1 ? prev.rawConcept || (isEn ? 'Scene start' : 'Szene Start') : (isEn ? `Continuation in Window ${i}` : `Fortführung der Bewegung in Window ${i}`),
-            cameraTrajectory: prev.cameraMotion || (isEn ? 'Seamless camera continuation' : 'Nahtlose Kamera-Weiterführung'),
-            continuityNote: isEn ? `Continuity from Window ${i - 1}` : `Kontinuität aus Window ${i - 1}`,
-            motionSpeed: '24fps Normal',
-            referenceImages: [],
-          });
-        }
-      } else if (targetCount < current.length && targetCount >= 1) {
-        current.splice(targetCount);
-      }
-      return { ...prev, windows: current, generatorMode: 'multi' };
-    });
-  };
-
   const steps = [
     { num: 1, title: isEn ? 'Idea & Concept' : 'Idee & Thema' },
     { num: 2, title: isEn ? 'Wardrobe & Style' : 'Mode & Kleidung' },
-    { num: 3, title: isEn ? 'Clip vs. Multi-Window' : 'Clip vs. Multi-Window' },
-    { num: 4, title: isEn ? 'Camera Motion' : 'Kamera & Fahrt' },
-    { num: 5, title: isEn ? 'Lighting & Mood' : 'Licht & Atmosphäre' },
-    { num: 6, title: isEn ? 'Lens & Optics' : 'Optik & Linsen' },
-    { num: 7, title: isEn ? 'Audio & Format' : 'Audio & Format' },
-    { num: 8, title: isEn ? 'Final Prompt' : 'Fertiger Prompt' },
+    { num: 3, title: isEn ? 'Camera Motion' : 'Kamera & Fahrt' },
+    { num: 4, title: isEn ? 'Lighting & Mood' : 'Licht & Atmosphäre' },
+    { num: 5, title: isEn ? 'Lens & Optics' : 'Optik & Linsen' },
+    { num: 6, title: isEn ? 'Audio & Format' : 'Audio & Format' },
+    { num: 7, title: isEn ? 'Final Prompt' : 'Fertiger Prompt' },
   ];
 
   // Filter presets for modal
@@ -559,112 +519,12 @@ export const PromptWizard: React.FC<PromptWizardProps> = ({
           </div>
         )}
 
-        {/* ================= STEP 3: CLIP VS. MULTI-WINDOW ================= */}
+        {/* ================= STEP 3: KAMERA & BEWEGUNG ================= */}
         {currentStep === 3 && (
           <div className="space-y-5 animate-fadeIn">
             <div className="flex items-start gap-3 border-b border-slate-100 pb-4">
               <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 font-black text-sm flex items-center justify-center shrink-0">
                 3
-              </span>
-              <div>
-                <h3 className="text-base font-extrabold text-slate-900">
-                  {isEn ? 'Single Clip or Multi-Window Sequence?' : 'Möchtest du 1 Einzel-Clip oder eine Multi-Window Sequenz?'}
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {isEn ? 'Choose between a standalone clip or a structured multi-window studio progression.' : 'Wähle zwischen einzelnem Clip oder strukturierter Multi-Window Abfolge.'}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Option Single Clip */}
-              <button
-                onClick={() =>
-                  setState((prev) => ({ ...prev, generatorMode: 'single' }))
-                }
-                className={`p-5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
-                  state.generatorMode === 'single'
-                    ? 'border-amber-500 bg-amber-50/50 shadow-md ring-2 ring-amber-500/20'
-                    : 'border-slate-200 bg-slate-50 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 bg-amber-500 text-slate-950 rounded-xl">
-                    <Film className="w-5 h-5" />
-                  </div>
-                  {state.generatorMode === 'single' && (
-                    <CheckCircle2 className="w-5 h-5 text-amber-600" />
-                  )}
-                </div>
-                <h4 className="font-extrabold text-sm text-slate-900">
-                  {isEn ? 'Single Clip (No Windows)' : 'Einzelner Clip (Keine Windows)'}
-                </h4>
-                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  {isEn ? 'Generates 1 cohesive prompt for a fluid 3s–10s video clip.' : 'Generiert 1 zusammenhängenden Prompt für ein flüssiges 3s–10s Video.'}
-                </p>
-              </button>
-
-              {/* Option Multi-Window */}
-              <button
-                onClick={() => {
-                  setState((prev) => ({ ...prev, generatorMode: 'multi' }));
-                  if (state.windows.length === 0) handleSetWindowCount(2);
-                }}
-                className={`p-5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
-                  state.generatorMode === 'multi'
-                    ? 'border-amber-500 bg-amber-50/50 shadow-md ring-2 ring-amber-500/20'
-                    : 'border-slate-200 bg-slate-50 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 bg-amber-500 text-slate-950 rounded-xl">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  {state.generatorMode === 'multi' && (
-                    <CheckCircle2 className="w-5 h-5 text-amber-600" />
-                  )}
-                </div>
-                <h4 className="font-extrabold text-sm text-slate-900">
-                  {isEn ? 'Multi-Window Sequence' : 'Multi-Window Sequenz'}
-                </h4>
-                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  {isEn ? 'Connects multiple consecutive 3s windows into a full studio trailer.' : 'Verbindet mehrere zusammenhängende 3s-Windows zu einem Studio-Trailer.'}
-                </p>
-              </button>
-            </div>
-
-            {/* If Multi-Window selected, ask for window count */}
-            {state.generatorMode === 'multi' && (
-              <div className="bg-slate-900 text-white rounded-xl p-4 space-y-3">
-                <label className="text-xs font-extrabold text-amber-400 block">
-                  {isEn ? 'How many Windows do you want to connect?' : 'Wie viele Windows möchtest du verbinden?'}
-                </label>
-                <div className="flex flex-wrap items-center gap-2">
-                  {[2, 3, 4, 5, 6].map((num) => (
-                    <button
-                      key={num}
-                      onClick={() => handleSetWindowCount(num)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                        state.windows.length === num
-                          ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
-                          : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
-                      }`}
-                    >
-                      {num} Windows ({num * 3} {isEn ? 'Seconds' : 'Sekunden'})
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ================= STEP 4: KAMERA & BEWEGUNG ================= */}
-        {currentStep === 4 && (
-          <div className="space-y-5 animate-fadeIn">
-            <div className="flex items-start gap-3 border-b border-slate-100 pb-4">
-              <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 font-black text-sm flex items-center justify-center shrink-0">
-                4
               </span>
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -708,12 +568,12 @@ export const PromptWizard: React.FC<PromptWizardProps> = ({
           </div>
         )}
 
-        {/* ================= STEP 5: LICHT & ATMOSPHÄRE ================= */}
-        {currentStep === 5 && (
+        {/* ================= STEP 4: LICHT & ATMOSPHÄRE ================= */}
+        {currentStep === 4 && (
           <div className="space-y-5 animate-fadeIn">
             <div className="flex items-start gap-3 border-b border-slate-100 pb-4">
               <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 font-black text-sm flex items-center justify-center shrink-0">
-                5
+                4
               </span>
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -757,12 +617,12 @@ export const PromptWizard: React.FC<PromptWizardProps> = ({
           </div>
         )}
 
-        {/* ================= STEP 6: OPTIK & LINSEN ================= */}
-        {currentStep === 6 && (
+        {/* ================= STEP 5: OPTIK & LINSEN ================= */}
+        {currentStep === 5 && (
           <div className="space-y-5 animate-fadeIn">
             <div className="flex items-start gap-3 border-b border-slate-100 pb-4">
               <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 font-black text-sm flex items-center justify-center shrink-0">
-                6
+                5
               </span>
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -806,12 +666,12 @@ export const PromptWizard: React.FC<PromptWizardProps> = ({
           </div>
         )}
 
-        {/* ================= STEP 7: AUDIO & FORMAT ================= */}
-        {currentStep === 7 && (
+        {/* ================= STEP 6: AUDIO & FORMAT ================= */}
+        {currentStep === 6 && (
           <div className="space-y-5 animate-fadeIn">
             <div className="flex items-start gap-3 border-b border-slate-100 pb-4">
               <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 font-black text-sm flex items-center justify-center shrink-0">
-                7
+                6
               </span>
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -909,8 +769,8 @@ export const PromptWizard: React.FC<PromptWizardProps> = ({
           </div>
         )}
 
-        {/* ================= STEP 8: FERTIGER PROMPT / EXPORT ================= */}
-        {currentStep === 8 && (
+        {/* ================= STEP 7: FERTIGER PROMPT / EXPORT ================= */}
+        {currentStep === 7 && (
           <div className="space-y-5 animate-fadeIn">
             <div className="flex items-start gap-3 border-b border-slate-100 pb-4">
               <span className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 font-black text-sm flex items-center justify-center shrink-0">
@@ -1085,6 +945,7 @@ export const PromptWizard: React.FC<PromptWizardProps> = ({
                     { id: 'restaurant', label: isEn ? '🍳 Food & Dining' : '🍳 Gastro' },
                     { id: 'cyberpunk', label: '🌆 Cyberpunk' },
                     { id: 'fashion', label: '💃 Fashion' },
+                    { id: 'lingerie', label: '🖤 Lingerie' },
                     { id: 'action', label: '⚡ Action' },
                     { id: 'fantasy', label: '🧙 Fantasy' },
                     { id: 'nature', label: isEn ? '🌿 Nature' : '🌿 Natur' },

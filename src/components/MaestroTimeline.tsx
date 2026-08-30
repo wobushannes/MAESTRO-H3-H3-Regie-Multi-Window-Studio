@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Layers, Plus, Trash2, Copy, Check, ArrowDown } from 'lucide-react';
 import { MaestroWindow, ReferenceImage } from '../types';
+import { ensurePrecisionTimeRange } from '../utils/promptCompiler';
 
 interface MaestroTimelineProps {
   windows: MaestroWindow[];
@@ -29,22 +30,47 @@ export const MaestroTimeline: React.FC<MaestroTimelineProps> = ({
   // Generate complete Maestro timeline script
   const generateScript = () => {
     let script = `// ==========================================\n`;
-    script += `// MAESTRO MULTI-WINDOW STITCHING SCRIPT\n`;
+    script += `// MAESTRO MULTI-WINDOW STITCHING SCRIPT (STRICT MAESTRO FORMAT)\n`;
     script += `// Engine: MiniMax H3 / Hailuo Video 2.1\n`;
     script += `// Windows Count: ${windows.length}\n`;
     script += `// ==========================================\n\n`;
 
-    windows.forEach((win) => {
-      script += `[WINDOW_${win.windowNumber} (${win.timeRange})]\n`;
-      script += `Prompt: ${win.prompt || rawConcept || 'Cinematic shot'}\n`;
-      script += `Camera_Trajectory: ${win.cameraTrajectory || 'Smooth Tracking'}\n`;
-      script += `Continuity: ${win.continuityNote || 'Standard Cut'}\n`;
-      if (win.referenceImages && win.referenceImages.length > 0) {
-        script += `Active_References: ${win.referenceImages.join(', ')}\n`;
+    const windowLines: string[] = [];
+    windows.forEach((win, idx) => {
+      const precisionRange = ensurePrecisionTimeRange(win.timeRange, idx);
+
+      let promptText = (win.prompt || rawConcept || 'Cinematic shot').trim();
+      if (promptText && !promptText.endsWith('.')) {
+        promptText += '.';
       }
-      script += `\n`;
+
+      let winLine = `window${win.windowNumber}: (${precisionRange}) ${promptText}`;
+      
+      const cameraText = (win.cameraTrajectory || '').trim();
+      if (cameraText) {
+        winLine += ` Camera: ${cameraText.endsWith('.') ? cameraText : cameraText + '.'}`;
+      }
+      const continuityText = (win.continuityNote || '').trim();
+      if (continuityText) {
+        winLine += ` Continuity: ${continuityText.endsWith('.') ? continuityText : continuityText + '.'}`;
+      }
+      const dialogueText = (win.dialogue || '').trim();
+      if (dialogueText) {
+        winLine += ` Dialogue: ${dialogueText.endsWith('.') ? dialogueText : dialogueText + '.'}`;
+      }
+      const sfxText = (win.sfxImpact || '').trim();
+      if (sfxText) {
+        winLine += ` SFX: ${sfxText.endsWith('.') ? sfxText : sfxText + '.'}`;
+      }
+      if (win.referenceImages && win.referenceImages.length > 0) {
+        winLine += ` Active_References: ${win.referenceImages.join(', ')}.`;
+      }
+
+      // Force single line
+      windowLines.push(winLine.replace(/\r?\n/g, ' ').trim());
     });
 
+    script += windowLines.join('\n');
     return script;
   };
 
