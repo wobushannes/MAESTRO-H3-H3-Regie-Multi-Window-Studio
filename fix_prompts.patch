@@ -1,0 +1,41 @@
+--- ./src/utils/promptCompiler.ts
++++ ./src/utils/promptCompiler.ts
+@@ -588,14 +588,38 @@
+     musicText = 'Minimalist atmospheric ambient swell and low isolated piano note, gradual buildup with deep cinematic trailer impacts.';
+   }
+ 
+-  return `integrated_multimodal_description: [Shot 1] (${formatSecondsToTimestamp(0)}–${formatSecondsToTimestamp(14)}) ${cleanVideo}\n\noverall_soundscape: ${soundscapeText}\n\nnon_diegetic_music: ${musicText}`;
++  // Cinema V2 LoRA Boilerplate Injection
++  const styleCode = state.styleCode || 'ASTROCINEMAV01K2T';
++  const lensText = state.lensStyle ? state.lensStyle.replace(/^(Lens & Render|Lens):\s*/i, '') : '50 mm anamorphic lens';
++  
++  const v2Boilerplate = `${styleCode} depicts a live-action cinematic scene in a native 16:9 widescreen frame, photographed on a ${lensText} with motivated tungsten practical lighting, cool window fill, realistic skin texture, shallow depth of field, fine 35 mm grain, subtle halation and controlled highlight rolloff. No cuts; one continuous shot throughout.`;
++
++  // Clean up legacy blocks from commercial presets (e.g., style_and_tone:)
++  let refinedVideo = cleanVideo
++    .replace(/style_and_tone:/g, '')
++    .replace(/audio_design:.*?(continuous_shot:|ACT 1)/gs, '')
++    .replace(/continuous_shot:/g, '')
++    .replace(/\[Continuous Shot\].*?\)/g, '')
++    .replace(/ASTROCINEMAV01K2T\./g, '')
++    .trim();
++
++  // Inject V2 Camera vocabulary if lacking
++  if (!/angle|establishing|overhead|close-up|wide/i.test(refinedVideo)) {
++      refinedVideo = `Establishing shot, clean single-subject composition with foreground layering and environmental depth. ` + refinedVideo;
++  }
++
++  return `integrated_multimodal_description: [Shot 1] ${v2Boilerplate} ${refinedVideo}\n\noverall_soundscape: ${soundscapeText}\n\nnon_diegetic_music: ${musicText}`;
+ }
+ 
+ /**
+  * 🎙️ Clean Audio & Voiceover Prompt
+@@ -902,7 +926,7 @@
+ 
+ /** Legacy alias for backwards compatibility */
+ export function compileDirectMiniMaxPrompt(state: PromptBuildState): string {
+-  return compileCleanVisualVideoPrompt(state);
++  return compileLocalPipelinePrompt(state);
+ }
+ 
+ /**

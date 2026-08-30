@@ -597,7 +597,27 @@ export function compileLocalPipelinePrompt(state: PromptBuildState): string {
     musicText = 'Minimalist atmospheric ambient swell and low isolated piano note, gradual buildup with deep cinematic trailer impacts.';
   }
 
-  return `integrated_multimodal_description: [Shot 1] (${formatSecondsToTimestamp(0)}–${formatSecondsToTimestamp(14)}) ${cleanVideo}\n\noverall_soundscape: ${soundscapeText}\n\nnon_diegetic_music: ${musicText}`;
+  // Cinema V2 LoRA Boilerplate Injection
+  const styleCode = state.styleCode || 'ASTROCINEMAV01K2T';
+  const lensText = state.lensStyle ? state.lensStyle.replace(/^(Lens & Render|Lens):\s*/i, '') : '50 mm anamorphic lens';
+  
+  const v2Boilerplate = `${styleCode} depicts a live-action cinematic scene in a native 16:9 widescreen frame, photographed on a ${lensText} with motivated tungsten practical lighting, cool window fill, realistic skin texture, shallow depth of field, fine 35 mm grain, subtle halation and controlled highlight rolloff. No cuts; one continuous shot throughout.`;
+
+  // Clean up legacy blocks from commercial presets (e.g., style_and_tone:)
+  let refinedVideo = cleanVideo
+    .replace(/style_and_tone:/gi, '')
+    .replace(/audio_design:.*?(continuous_shot:|ACT 1)/gsi, '')
+    .replace(/continuous_shot:/gi, '')
+    .replace(/\[Continuous Shot\].*?\)/gi, '')
+    .replace(/ASTROCINEMAV01K2T\.?/gi, '')
+    .trim();
+
+  // Inject V2 Camera vocabulary if lacking
+  if (!/angle|establishing|overhead|close-up|wide|over-the-shoulder|dutch/i.test(refinedVideo)) {
+      refinedVideo = `Establishing shot, clean single-subject composition with foreground layering and environmental depth. ` + refinedVideo;
+  }
+
+  return `integrated_multimodal_description: [Shot 1] ${v2Boilerplate} ${refinedVideo}\n\noverall_soundscape: ${soundscapeText}\n\nnon_diegetic_music: ${musicText}`;
 }
 
 /**
@@ -715,8 +735,13 @@ export function compileStudioTheatricalScript(state: PromptBuildState): string {
     state.windows.forEach((win, idx) => {
       const precisionRange = ensurePrecisionTimeRange(win.timeRange, idx);
       const promptText = (win.prompt || state.rawConcept || 'Dynamic cinematic scene sequence').trim();
-
-      let winLine = `window${win.windowNumber}: (${precisionRange}) [${styleCode}] [Category: ${catLabel}] [Person: ${personLabel}] Action: ${promptText}`;
+      let refinedText = promptText;
+      if (!/angle|establishing|overhead|close-up|wide|over-the-shoulder|dutch/i.test(refinedText)) {
+          refinedText = "Establishing shot, clean single-subject composition with foreground layering and environmental depth. " + refinedText;
+      }
+      const lensText = state.lensStyle ? state.lensStyle.replace(/^(Lens & Render|Lens):\s*/i, "") : "50 mm anamorphic lens";
+      const actionText = `${styleCode} depicts a live-action cinematic scene in a native 16:9 widescreen frame, photographed on a ${lensText} with motivated tungsten practical lighting, cool window fill, realistic skin texture, shallow depth of field, fine 35 mm grain, subtle halation and controlled highlight rolloff. No cuts; one continuous shot throughout. ${refinedText}`;
+      let winLine = `window${win.windowNumber}: (${precisionRange}) [${styleCode}] [Category: ${catLabel}] [Person: ${personLabel}] Action: ${actionText}`;
 
       const cameraText = (win.cameraTrajectory || state.cameraMotion || '').trim();
       if (cameraText) {
@@ -902,7 +927,7 @@ export function compileStudioTheatricalScript(state: PromptBuildState): string {
 
 /** Legacy alias for backwards compatibility */
 export function compileDirectMiniMaxPrompt(state: PromptBuildState): string {
-  return compileCleanVisualVideoPrompt(state);
+  return compileLocalPipelinePrompt(state);
 }
 
 /**
